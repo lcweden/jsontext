@@ -1,0 +1,22 @@
+{
+  "name": "jsontext",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "imports": {
+    "#src/*": "./src/*.ts"
+  },
+  "scripts": {
+    "dev": "vite",
+    "test": "deno task test",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "format": "deno task format",
+    "lint": "deno task lint"
+  },
+  "devDependencies": {
+    "@types/node": "^25.6.0",
+    "typescript": "~6.0.2",
+    "vite": "^8.0.9"
+  }
+}
