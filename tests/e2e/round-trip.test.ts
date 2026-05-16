@@ -1,4 +1,9 @@
-import { JSONTextDecoder, JSONTextEncoder } from "#src/index";
+import {
+  JSONTextDecoder,
+  JSONTextDecoderStream,
+  JSONTextEncoder,
+  JSONTextEncoderStream,
+} from "#src/index";
 import { decodeText } from "#src/utils/text";
 import { assertEquals } from "#std/assert";
 
@@ -22,6 +27,31 @@ Deno.test("[e2e] round-trip", async (test) => {
     assertEquals(
       JSON.parse(decodeText(encoder.bytes())),
       JSON.parse(decodeText(bytes)),
+    );
+  });
+
+  await test.step("should round-trip example.com.har through stream pipeline", async () => {
+    const chunks: Uint8Array[] = [];
+    const file = await Deno.open(HAR_URL, { read: true });
+    const stream = file.readable
+      .pipeThrough(new JSONTextDecoderStream())
+      .pipeThrough(new JSONTextEncoderStream({ multiline: false, spaceAfterColon: false }));
+
+    for await (const chunk of stream) {
+      chunks.push(chunk);
+    }
+
+    const output = new Uint8Array(chunks.reduce((acc, c) => acc + c.length, 0));
+    let offset = 0;
+
+    for (const chunk of chunks) {
+      output.set(chunk, offset);
+      offset += chunk.length;
+    }
+
+    assertEquals(
+      JSON.parse(decodeText(output)),
+      JSON.parse(decodeText(await Deno.readFile(HAR_URL))),
     );
   });
 });

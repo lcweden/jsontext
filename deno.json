@@ -1,9 +1,10 @@
 {
   "tasks": {
-    "test": "deno test --coverage --allow-all",
+    "bench": "deno bench --allow-all",
     "check": "deno check && deno fmt --check && deno lint",
     "format": "deno fmt",
-    "lint": "deno lint"
+    "lint": "deno lint",
+    "test": "deno test --coverage --allow-all"
   },
   "imports": {
     "#src/*": "./src/*.ts",
@@ -14,9 +15,17 @@
   },
   "lint": {
     "rules": {
-      "tags": ["recommended"],
-      "exclude": ["no-sloppy-imports"]
+      "tags": [
+        "recommended"
+      ],
+      "exclude": [
+        "no-sloppy-imports"
+      ]
     }
   },
-  "exclude": ["node_modules/", "public/", "dist/"]
+  "exclude": [
+    "node_modules/",
+    "public/",
+    "dist/"
+  ]
 }
