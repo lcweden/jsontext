@@ -23,6 +23,10 @@ class Encoder {
     return this.#tape.bytes();
   }
 
+  depth(): number {
+    return this.#state.depth();
+  }
+
   outputOffset(): number {
     return this.#tape.outputOffset();
   }

@@ -31,11 +31,19 @@ class Decoder {
   }
 
   checkEOF(): void {
+    if (this.#state.depth() > 1) {
+      throw new SyntaxError(`Unexpected end of input`);
+    }
+
     const position = consumeWhitespace(this.#cursor.bytes, this.#cursor.previousEnd);
 
     if (!this.#cursor.needMore(position)) {
       throw new SyntaxError(`Unexpected trailing characters at position ${position}`);
     }
+  }
+
+  depth(): number {
+    return this.#state.depth();
   }
 
   end(): void {
