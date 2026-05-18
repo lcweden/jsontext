@@ -1,57 +1,65 @@
-import { KIND } from "#src/common/constants";
-import { JSONTextDecoder } from "#src/index";
-import { encodeText } from "#src/utils/text";
-import { assertEquals } from "#std/assert";
+import { JSONTextDecoderStream } from "#src/index";
+import { assert } from "#std/assert";
 
-Deno.test("[e2e] streaming readValue", async (test) => {
-  await test.step("should parse a JSON array fed one byte at a time using readValue", () => {
-    const json = JSON.stringify([{ "id": 1, "name": "Alice" }, 42, "hello", [1, 2]]);
-    const bytes = encodeText(json);
-    const decoder = new JSONTextDecoder();
-    const values: string[] = [];
-    let started = false;
+const GITHUB_TOKEN = Deno.env.get("GITHUB_TOKEN");
+const FIXTURE_BASE = "https://github.com/lcweden/jsontext/releases/download/fixtures";
 
-    for (let i = 0; i < bytes.length; i++) {
-      decoder.push(bytes.subarray(i, i + 1));
+Deno.test("[e2e] streaming", async (test) => {
+  await test.step("[fixture] json_bus.json.gz", async (test) => {
+    await test.step("should stream 75 MB without error", async () => {
+      const input = `${FIXTURE_BASE}/json_bus.json.gz`;
+      const headers = new Headers({ "Accept": "application/octet-stream" });
 
-      if (i === bytes.length - 1) {
-        decoder.end();
+      if (GITHUB_TOKEN) {
+        headers.set("Authorization", `Bearer ${GITHUB_TOKEN}`);
       }
 
-      if (!started) {
-        if (decoder.readToken() === undefined) {
-          continue;
-        }
+      const response = await fetch(input, { headers });
 
-        started = true;
+      if (!response.ok || !response.body) {
+        throw new Error(`Failed to fetch fixture: ${response.statusText}`);
       }
 
-      while (true) {
-        const kind = decoder.peekKind();
+      const decompresser = new DecompressionStream("gzip");
+      const decoder = new JSONTextDecoderStream();
+      const stream = response.body.pipeThrough(decompresser).pipeThrough(decoder);
 
-        if (kind === undefined) {
-          break;
-        }
+      let tokenCount = 0;
 
-        if (kind === KIND.ARRAY_END) {
-          decoder.readToken();
-          break;
-        }
-
-        const value = decoder.readValue();
-
-        if (value === undefined) {
-          break;
-        }
-
-        values.push(value.toText());
+      for await (const _ of stream) {
+        tokenCount++;
       }
-    }
 
-    assertEquals(values.length, 4);
-    assertEquals(values[0], '{"id":1,"name":"Alice"}');
-    assertEquals(values[1], "42");
-    assertEquals(values[2], '"hello"');
-    assertEquals(values[3], "[1,2]");
+      assert(tokenCount > 0);
+    });
+  });
+
+  await test.step("[fixture] www.youtube.com.har.gz", async (test) => {
+    await test.step("should stream 131 MB without error", async () => {
+      const input = `${FIXTURE_BASE}/www.youtube.com.har.gz`;
+      const headers = new Headers({ "Accept": "application/octet-stream" });
+
+      if (GITHUB_TOKEN) {
+        headers.set("Authorization", `Bearer ${GITHUB_TOKEN}`);
+      }
+
+      const response = await fetch(input, { headers });
+
+      if (!response.ok || !response.body) {
+        throw new Error(`Failed to fetch fixture: ${response.statusText}`);
+      }
+
+      const decompresser = new DecompressionStream("gzip");
+      const decoder = new JSONTextDecoderStream();
+      const stream = response.body.pipeThrough(decompresser).pipeThrough(decoder);
+
+      let tokenCount = 0;
+
+      for await (const _ of stream) {
+        tokenCount++;
+      }
+
+      assert(tokenCount > 0);
+    });
   });
 });

@@ -39,7 +39,7 @@ class Automaton {
     return this.#stack.length + 1;
   }
 
-  index(index: number): Entry {
+  getEntry(index: number): Entry {
     if (index === this.#stack.length) {
       return this.#last;
     }

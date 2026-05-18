@@ -7,12 +7,12 @@ Deno.test("[module] value", async (test) => {
   await test.step("[function] constructor", async (test) => {
     await test.step("should return the correct string representation", () => {
       const cases = [
-        { actual: new Value(e('"hello"')).toText(), expected: '"hello"' },
-        { actual: new Value(e("true")).toText(), expected: "true" },
-        { actual: new Value(e("false")).toText(), expected: "false" },
-        { actual: new Value(e("null")).toText(), expected: "null" },
-        { actual: new Value(e("{}")).toText(), expected: "{}" },
-        { actual: new Value(e("[]")).toText(), expected: "[]" },
+        { actual: new Value(e('"hello"')).text(), expected: '"hello"' },
+        { actual: new Value(e("true")).text(), expected: "true" },
+        { actual: new Value(e("false")).text(), expected: "false" },
+        { actual: new Value(e("null")).text(), expected: "null" },
+        { actual: new Value(e("{}")).text(), expected: "{}" },
+        { actual: new Value(e("[]")).text(), expected: "[]" },
       ];
 
       for (const { actual, expected } of cases) {
@@ -65,23 +65,23 @@ Deno.test("[module] value", async (test) => {
     await test.step("should sort object keys lexicographically", () => {
       const cases = [
         {
-          actual: new Value(e('{"b":1,"a":2}')).canonicalize().toText(),
+          actual: new Value(e('{"b":1,"a":2}')).canonicalize().text(),
           expected: '{"a":2,"b":1}',
         },
         {
-          actual: new Value(e('{"a":1,"b":2}')).canonicalize().toText(),
+          actual: new Value(e('{"a":1,"b":2}')).canonicalize().text(),
           expected: '{"a":1,"b":2}',
         },
         {
-          actual: new Value(e('{"z":3,"y":2,"x":1}')).canonicalize().toText(),
+          actual: new Value(e('{"z":3,"y":2,"x":1}')).canonicalize().text(),
           expected: '{"x":1,"y":2,"z":3}',
         },
         {
-          actual: new Value(e('{"b":{"z":1,"a":2},"a":0}')).canonicalize().toText(),
+          actual: new Value(e('{"b":{"z":1,"a":2},"a":0}')).canonicalize().text(),
           expected: '{"a":0,"b":{"a":2,"z":1}}',
         },
         {
-          actual: new Value(e("[3,1,2,3,2,1]")).canonicalize().toText(),
+          actual: new Value(e("[3,1,2,3,2,1]")).canonicalize().text(),
           expected: "[3,1,2,3,2,1]",
         },
       ];
@@ -93,14 +93,14 @@ Deno.test("[module] value", async (test) => {
 
     await test.step("should normalize number representation", () => {
       const cases = [
-        { actual: new Value(e("1.0")).canonicalize().toText(), expected: "1" },
-        { actual: new Value(e("0.000")).canonicalize().toText(), expected: "0" },
-        { actual: new Value(e("-0.00")).canonicalize().toText(), expected: "0" },
-        { actual: new Value(e("3.14000")).canonicalize().toText(), expected: "3.14" },
-        { actual: new Value(e("1e+0")).canonicalize().toText(), expected: "1" },
-        { actual: new Value(e("1e-0")).canonicalize().toText(), expected: "1" },
-        { actual: new Value(e("1e+1")).canonicalize().toText(), expected: "10" },
-        { actual: new Value(e("1e-1")).canonicalize().toText(), expected: "0.1" },
+        { actual: new Value(e("1.0")).canonicalize().text(), expected: "1" },
+        { actual: new Value(e("0.000")).canonicalize().text(), expected: "0" },
+        { actual: new Value(e("-0.00")).canonicalize().text(), expected: "0" },
+        { actual: new Value(e("3.14000")).canonicalize().text(), expected: "3.14" },
+        { actual: new Value(e("1e+0")).canonicalize().text(), expected: "1" },
+        { actual: new Value(e("1e-0")).canonicalize().text(), expected: "1" },
+        { actual: new Value(e("1e+1")).canonicalize().text(), expected: "10" },
+        { actual: new Value(e("1e-1")).canonicalize().text(), expected: "0.1" },
       ];
 
       for (const { actual, expected } of cases) {
@@ -110,8 +110,8 @@ Deno.test("[module] value", async (test) => {
 
     await test.step("should handle empty objects and arrays", () => {
       const cases = [
-        { actual: new Value(e("{}")).canonicalize().toText(), expected: "{}" },
-        { actual: new Value(e("[]")).canonicalize().toText(), expected: "[]" },
+        { actual: new Value(e("{}")).canonicalize().text(), expected: "{}" },
+        { actual: new Value(e("[]")).canonicalize().text(), expected: "[]" },
       ];
 
       for (const { actual, expected } of cases) {
@@ -121,10 +121,10 @@ Deno.test("[module] value", async (test) => {
 
     await test.step("should return scalar values unchanged", () => {
       const cases = [
-        { actual: new Value(e('"a"')).canonicalize().toText(), expected: '"a"' },
-        { actual: new Value(e("true")).canonicalize().toText(), expected: "true" },
-        { actual: new Value(e("false")).canonicalize().toText(), expected: "false" },
-        { actual: new Value(e("null")).canonicalize().toText(), expected: "null" },
+        { actual: new Value(e('"a"')).canonicalize().text(), expected: '"a"' },
+        { actual: new Value(e("true")).canonicalize().text(), expected: "true" },
+        { actual: new Value(e("false")).canonicalize().text(), expected: "false" },
+        { actual: new Value(e("null")).canonicalize().text(), expected: "null" },
       ];
 
       for (const { actual, expected } of cases) {
@@ -186,16 +186,16 @@ Deno.test("[module] value", async (test) => {
     });
   });
 
-  await test.step("[function] toText", async (test) => {
+  await test.step("[function] text", async (test) => {
     await test.step("should return the raw bytes decoded as a UTF-8 string", () => {
       const cases = [
-        { actual: new Value(e('"hello"')).toText(), expected: '"hello"' },
-        { actual: new Value(e("42")).toText(), expected: "42" },
-        { actual: new Value(e("true")).toText(), expected: "true" },
-        { actual: new Value(e("false")).toText(), expected: "false" },
-        { actual: new Value(e("null")).toText(), expected: "null" },
-        { actual: new Value(e('{"a":1}')).toText(), expected: '{"a":1}' },
-        { actual: new Value(e("[1,2]")).toText(), expected: "[1,2]" },
+        { actual: new Value(e('"hello"')).text(), expected: '"hello"' },
+        { actual: new Value(e("42")).text(), expected: "42" },
+        { actual: new Value(e("true")).text(), expected: "true" },
+        { actual: new Value(e("false")).text(), expected: "false" },
+        { actual: new Value(e("null")).text(), expected: "null" },
+        { actual: new Value(e('{"a":1}')).text(), expected: '{"a":1}' },
+        { actual: new Value(e("[1,2]")).text(), expected: "[1,2]" },
       ];
 
       for (const { actual, expected } of cases) {

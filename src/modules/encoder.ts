@@ -1,5 +1,6 @@
 import { ASCII, KIND, UNICODE } from "#src/common/constants";
 import { SyntacticError } from "#src/common/errors";
+import type Pointer from "#src/modules/pointer";
 import State from "#src/modules/state";
 import Tape from "#src/modules/tape";
 import Token from "#src/modules/token";
@@ -23,6 +24,10 @@ class Encoder {
     return this.#tape.bytes();
   }
 
+  depth(): number {
+    return this.#state.depth();
+  }
+
   outputOffset(): number {
     return this.#tape.outputOffset();
   }
@@ -32,7 +37,7 @@ class Encoder {
     this.#state = new State(this.#options);
   }
 
-  stackPointer(where: 0 | 1 | -1) {
+  stackPointer(where: 0 | 1 | -1): Pointer {
     return this.#state.stackPointer(where);
   }
 
@@ -121,7 +126,7 @@ class Encoder {
       }
 
       if (error instanceof SyntaxError) {
-        const pointer = this.#state.stackPointer(1);
+        const pointer = this.#state.stackPointer(1).toString();
         const offset = this.#tape.outputOffset();
 
         throw new SyntacticError(error.message, pointer, offset);
@@ -194,7 +199,7 @@ class Encoder {
       }
 
       if (error instanceof SyntaxError) {
-        const pointer = this.#state.stackPointer(1);
+        const pointer = this.#state.stackPointer(1).toString();
         const offset = this.#tape.outputOffset();
 
         throw new SyntacticError(error.message, pointer, offset);

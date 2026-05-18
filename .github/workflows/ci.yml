@@ -16,7 +16,7 @@ jobs:
 
     steps:
       - name: Setup
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Deno
         uses: denoland/setup-deno@v2
@@ -28,3 +28,5 @@ jobs:
 
       - name: Test
         run: deno task test
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

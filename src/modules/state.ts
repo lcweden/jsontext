@@ -78,11 +78,11 @@ class State {
   }
 
   stackPointer(where: -1 | 0 | 1): Pointer {
-    let result = "";
+    const tokens: string[] = [];
     let depth = 0;
 
     for (let index = 1; index < this.#automaton.depth(); index++) {
-      const entry = this.#automaton.index(index);
+      const entry = this.#automaton.getEntry(index);
       let delta = -1;
 
       if (index === this.#automaton.depth() - 1) {
@@ -91,7 +91,7 @@ class State {
         const isExpectingName = where > 0 && entry.needObjectName();
 
         if (isEmpty || isNotInObject || isExpectingName) {
-          return new Pointer(result);
+          return new Pointer(tokens);
         }
 
         if (where > 0 && entry.isArray()) {
@@ -100,14 +100,14 @@ class State {
       }
 
       if (entry.isObject()) {
-        result += "/" + Pointer.escapeToken(this.#names.getObjectName(depth));
+        tokens.push(this.#names.getObjectName(depth));
         depth++;
       } else {
-        result += "/" + (entry.count() + delta);
+        tokens.push(String(entry.count() + delta));
       }
     }
 
-    return new Pointer(result);
+    return new Pointer(tokens);
   }
 }
 

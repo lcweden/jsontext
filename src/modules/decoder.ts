@@ -1,6 +1,7 @@
 import { ASCII, KIND } from "#src/common/constants";
 import { SyntacticError } from "#src/common/errors";
 import Cursor from "#src/modules/cursor";
+import type Pointer from "#src/modules/pointer";
 import State from "#src/modules/state";
 import Token from "#src/modules/token";
 import Value from "#src/modules/value";
@@ -31,11 +32,19 @@ class Decoder {
   }
 
   checkEOF(): void {
+    if (this.#state.depth() > 1) {
+      throw new SyntaxError(`Unexpected end of input`);
+    }
+
     const position = consumeWhitespace(this.#cursor.bytes, this.#cursor.previousEnd);
 
     if (!this.#cursor.needMore(position)) {
       throw new SyntaxError(`Unexpected trailing characters at position ${position}`);
     }
+  }
+
+  depth(): number {
+    return this.#state.depth();
   }
 
   end(): void {
@@ -87,7 +96,7 @@ class Decoder {
 
     if (!kind) {
       const message = `invalid character`;
-      const pointer = this.#state.stackPointer(0);
+      const pointer = this.#state.stackPointer(0).toString();
       const offset = this.#cursor.offsetAt(position);
       const error = new SyntacticError(message, pointer, offset);
 
@@ -99,7 +108,7 @@ class Decoder {
     const expected = this.#state.needDelimiter(kind);
 
     if (expected !== delimiter) {
-      const pointer = this.#state.stackPointer(0);
+      const pointer = this.#state.stackPointer(0).toString();
       const offset = this.#cursor.offsetAt(position);
       const error = new SyntacticError("invalid delimiter", pointer, offset);
 
@@ -164,7 +173,7 @@ class Decoder {
       }
 
       if (error instanceof SyntaxError) {
-        const pointer = this.#state.stackPointer(0);
+        const pointer = this.#state.stackPointer(0).toString();
         const offset = this.#cursor.offsetAt(start);
 
         throw new SyntacticError(error.message, pointer, offset);
@@ -234,11 +243,11 @@ class Decoder {
     return new Value(bytes.slice());
   }
 
-  skipValue(): void {
-    this.readValue();
+  skipValue(): boolean {
+    return this.readValue() !== undefined;
   }
 
-  stackPointer(where: 0 | 1 | -1 = 1) {
+  stackPointer(where: 0 | 1 | -1 = 1): Pointer {
     return this.#state.stackPointer(where);
   }
 
@@ -333,7 +342,7 @@ class Decoder {
         return 0;
       }
 
-      const pointer = this.#state.stackPointer(0);
+      const pointer = this.#state.stackPointer(0).toString();
       const offset = this.#cursor.offsetAt(start);
       const error = new SyntacticError("invalid literal null", pointer, offset);
 
@@ -353,7 +362,7 @@ class Decoder {
         return 0;
       }
 
-      const pointer = this.#state.stackPointer(0);
+      const pointer = this.#state.stackPointer(0).toString();
       const offset = this.#cursor.offsetAt(start);
       const error = new SyntacticError("invalid literal true", pointer, offset);
 
@@ -373,7 +382,7 @@ class Decoder {
         return 0;
       }
 
-      const pointer = this.#state.stackPointer(0);
+      const pointer = this.#state.stackPointer(0).toString();
       const offset = this.#cursor.offsetAt(start);
       const error = new SyntacticError("invalid literal false", pointer, offset);
 
@@ -396,11 +405,11 @@ class Decoder {
       }
     }
 
-    const bytes = this.#cursor.bytes.subarray(start, start + size);
-    const decoded = decodeText(bytes, { fatal: !this.#options.allowInvalidUTF8 });
-    const string = JSON.parse(decoded);
-
     if (this.#state.needObjectName()) {
+      const bytes = this.#cursor.bytes.subarray(start, start + size);
+      const decoded = decodeText(bytes, { fatal: !this.#options.allowInvalidUTF8 });
+      const string = JSON.parse(decoded);
+
       this.#state.setLast(string);
     }
 
@@ -424,10 +433,6 @@ class Decoder {
       return 0;
     }
 
-    const bytes = this.#cursor.bytes.subarray(start, start + size);
-    const decoded = decodeText(bytes, { fatal: true });
-
-    JSON.parse(decoded);
     this.#state.appendNumber();
 
     return size;

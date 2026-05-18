@@ -1,14 +1,34 @@
-import { ASCII, KIND } from "#src/common/constants";
+import { ASCII, DEFAULT_DECODER_OPTIONS, KIND } from "#src/common/constants";
 import Decoder from "#src/modules/decoder";
+import type Token from "#src/modules/token";
 import type { Kind } from "#src/types/kind";
 import { normalize } from "#src/utils/kind";
 import { decodeText, encodeText } from "#src/utils/text";
 import { compareUTF16, consumeWhitespace } from "#src/utils/wire";
 
+/**
+ * Represents a complete JSON value.
+ *
+ * A value may be a scalar (`null`, `true`, `false`, a number, or a string)
+ * or a composite structure (an object or array, including all nested content).
+ * It holds the raw UTF-8 bytes and provides methods for converting,
+ * validating, canonicalizing, and iterating over the value.
+ *
+ * Unlike {@link Token}, a `Value` may be preceded by whitespace.
+ */
 class Value {
   #bytes: Uint8Array;
   #kind: Kind;
 
+  /**
+   * Creates a `Value` from raw UTF-8 bytes.
+   *
+   * Leading whitespace is accepted and preserved in {@link bytes}.
+   *
+   * @param bytes - Raw UTF-8 bytes of a complete JSON value.
+   * @throws {RangeError} If `bytes` is empty.
+   * @throws {SyntaxError} If no valid JSON token is found after skipping leading whitespace.
+   */
   constructor(bytes: Uint8Array) {
     if (!bytes.length) {
       throw new RangeError("Value must have at least one byte");
@@ -30,14 +50,40 @@ class Value {
     this.#kind = kind;
   }
 
+  /** The {@link Kind} of the top-level token of this value. */
   get kind() {
     return this.#kind;
   }
 
+  /** The raw UTF-8 bytes of this value, including any leading whitespace. */
   get bytes() {
     return this.#bytes;
   }
 
+  /**
+   * Creates a `Value` from any JavaScript value via `JSON.stringify`.
+   *
+   * @param input - Any JSON-serialisable value.
+   * @returns A new `Value` whose bytes are the JSON representation of `input`.
+   * @example
+   * const value = Value.from({ a: 1, b: [true, null] });
+   * console.log(value.text()); // '{"a":1,"b":[true,null]}'
+   */
+  static from(input: unknown): Value {
+    const json = JSON.stringify(input);
+    const encoded = encodeText(json);
+
+    return new Value(encoded);
+  }
+
+  /**
+   * Returns a canonicalized copy of this value.
+   *
+   * Canonicalization recursively sorts object keys by UTF-16 code unit order
+   * and normalizes numbers. The result is deterministic and idempotent.
+   *
+   * @returns A new `Value` in canonical form.
+   */
   canonicalize(): Value {
     const decoder = new Decoder(this.#bytes, { allowDuplicateNames: true });
     decoder.end();
@@ -45,10 +91,21 @@ class Value {
     return new Value(this.#processValue(decoder));
   }
 
+  /**
+   * Returns a deep copy of this value with an independent byte array.
+   *
+   * @returns A new `Value` backed by a cloned `Uint8Array`.
+   */
   clone(): Value {
     return new Value(this.#bytes.slice());
   }
 
+  /**
+   * Returns `true` if the bytes represent a structurally valid, complete JSON
+   * value with no trailing content.
+   *
+   * @returns `true` if valid, `false` otherwise. Never throws.
+   */
   isValid(): boolean {
     try {
       const decoder = new Decoder(this.#bytes, {});
@@ -69,8 +126,46 @@ class Value {
     }
   }
 
-  toText(): string {
+  /**
+   * Deserializes this value to a JavaScript value via `JSON.parse`.
+   *
+   * @returns The parsed JavaScript value.
+   */
+  json(): unknown {
+    return JSON.parse(this.text());
+  }
+
+  /**
+   * Returns the UTF-8 string representation of this value.
+   *
+   * @returns The JSON text of this value.
+   * @throws If the bytes contain invalid UTF-8 sequences.
+   */
+  text(): string {
     return decodeText(this.bytes, { fatal: true });
+  }
+
+  /**
+   * Returns a generator that yields each {@link Token} within this value in
+   * document order.
+   *
+   * For scalar values, yields one token. For objects and arrays, yields all
+   * tokens including structural delimiters, keys, and nested values.
+   *
+   * @yields {Token} Tokens in document order.
+   */
+  *tokens(): Generator<Token> {
+    const decoder = new Decoder(this.bytes, DEFAULT_DECODER_OPTIONS);
+
+    while (true) {
+      const token = decoder.readToken();
+
+      if (token === undefined) {
+        break;
+      }
+
+      yield token;
+    }
   }
 
   #processValue(decoder: Decoder): Uint8Array {
