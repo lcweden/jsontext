@@ -36,7 +36,7 @@ jobs:
         run: npm run build
 
       - name: Publish to npm
-        run: npm publish --provenance --access public --access public
+        run: npm publish --access public
 
       - name: Publish to JSR
         run: npx jsr publish
