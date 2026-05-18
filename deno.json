@@ -1,4 +1,10 @@
 {
+  "name": "@lcweden/jsontext",
+  "version": "0.1.0",
+  "license": "MIT",
+  "exports": {
+    ".": "./src/index.ts"
+  },
   "tasks": {
     "bench": "deno bench --allow-all",
     "check": "deno check && deno fmt --check && deno lint",
@@ -26,6 +32,11 @@
   "exclude": [
     "node_modules/",
     "public/",
-    "dist/"
-  ]
+    "dist/",
+    "vite.config.ts"
+  ],
+  "publish": {
+    "include": ["src/", "README.md", "LICENSE", "deno.json"],
+    "exclude": ["tests/", ".github/", ".vscode/", "dist/", "public/"]
+  }
 }

@@ -38,35 +38,35 @@ class Token {
   }
 
   /** The {@link Kind} of this token. */
-  get kind() {
+  get kind(): Kind {
     return this.#kind;
   }
 
   /** The raw UTF-8 bytes of this token. */
-  get bytes() {
+  get bytes(): Uint8Array {
     return this.#bytes;
   }
 
   /** Pre-built `null` token. */
-  static NULL = Token.fromText("null");
+  static NULL: Token = Token.fromText("null");
 
   /** Pre-built `true` token. */
-  static TRUE = Token.fromText("true");
+  static TRUE: Token = Token.fromText("true");
 
   /** Pre-built `false` token. */
-  static FALSE = Token.fromText("false");
+  static FALSE: Token = Token.fromText("false");
 
   /** Pre-built `{` token. */
-  static OBJECT_BEGIN = Token.fromText("{");
+  static OBJECT_BEGIN: Token = Token.fromText("{");
 
   /** Pre-built `}` token. */
-  static OBJECT_END = Token.fromText("}");
+  static OBJECT_END: Token = Token.fromText("}");
 
   /** Pre-built `[` token. */
-  static ARRAY_BEGIN = Token.fromText("[");
+  static ARRAY_BEGIN: Token = Token.fromText("[");
 
   /** Pre-built `]` token. */
-  static ARRAY_END = Token.fromText("]");
+  static ARRAY_END: Token = Token.fromText("]");
 
   /**
    * Creates a `Token` from a raw JSON text string.
