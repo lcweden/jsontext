@@ -32,7 +32,8 @@
   "exclude": [
     "node_modules/",
     "public/",
-    "dist/"
+    "dist/",
+    "vite.config.ts"
   ],
   "publish": {
     "include": ["src/", "README.md", "LICENSE", "deno.json"],
