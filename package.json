@@ -1,13 +1,41 @@
 {
   "name": "jsontext",
-  "private": true,
   "version": "0.0.0",
+  "description": "A streaming JSON parser and serializer for JavaScript.",
+  "keywords": ["json", "stream", "decoder", "encoder"],
   "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
   "imports": {
-    "#src/*": "./src/*.ts"
+    "#src/*": {
+      "types": "./dist/*.d.ts",
+      "default": "./src/*.ts"
+    }
+  },
+  "files": ["dist/**/*", "!dist/**/*.map"],
+  "author": {
+    "name": "lcweden",
+    "url": "https://github.com/lcweden"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/lcweden/jsontext",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lcweden/jsontext.git"
+  },
+  "bugs": {
+    "url": "https://github.com/lcweden/jsontext/issues"
   },
   "scripts": {
-    "build": "tsc && vite build",
+    "build": "vite build && tsc -p tsconfig.build.json",
     "bench": "deno task bench",
     "dev": "vite",
     "format": "deno task format",
