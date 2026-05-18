@@ -18,20 +18,14 @@ type JSONTextSelectorStreamOptions = DecoderOptions & {
  * value in document order.
  *
  * This implementation supports a **subset** of JSONPath (RFC 9535):
+ * **supported:**
  *
- * | Syntax | Description |
- * |---|---|
- * | `$` | Root node |
- * | `$.key` | Named child member (dot notation) |
- * | `$.*` | Wildcard — all direct children |
- * | `$[0]` | Indexed child (non-negative integer only) |
- * | `$['key']` / `$["key"]` | Quoted name child |
- * | `$[*]` | Wildcard child (bracket notation) |
- * | `$[start:end]` / `$[start:end:step]` | Array slice (non-negative bounds and step only) |
- * | `$..key` / `$..*` | Recursive descent |
- *
- * **Not supported:** negative indices, negative slice bounds, filter
- * expressions (`?(...)`), and union selectors (`[0,1]`).
+ * - Child Segment
+ * - Descendant Segment
+ * - Name Selector
+ * - Wildcard Selector
+ * - Index Selector
+ * - Array Slice Selector
  *
  * @see https://www.rfc-editor.org/rfc/rfc9535
  * @example
