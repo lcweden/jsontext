@@ -10,7 +10,41 @@ type JSONTextSelectorStreamOptions = DecoderOptions & {
   readableStrategy?: QueuingStrategy<Value>;
 };
 
+/**
+ * A `TransformStream` that filters a JSON byte stream and emits only the
+ * {@link Value} objects matching a JSONPath-like query.
+ *
+ * Writable side accepts raw JSON bytes. Readable side emits each matched
+ * value in document order.
+ *
+ * This implementation supports a **subset** of JSONPath (RFC 9535):
+ *
+ * | Syntax | Description |
+ * |---|---|
+ * | `$` | Root node |
+ * | `$.key` | Named child member (dot notation) |
+ * | `$.*` | Wildcard — all direct children |
+ * | `$[0]` | Indexed child (non-negative integer only) |
+ * | `$['key']` / `$["key"]` | Quoted name child |
+ * | `$[*]` | Wildcard child (bracket notation) |
+ * | `$[start:end]` / `$[start:end:step]` | Array slice (non-negative bounds and step only) |
+ * | `$..key` / `$..*` | Recursive descent |
+ *
+ * **Not supported:** negative indices, negative slice bounds, filter
+ * expressions (`?(...)`), and union selectors (`[0,1]`).
+ *
+ * @see https://www.rfc-editor.org/rfc/rfc9535
+ * @example
+ * const response = await fetch(url);
+ * const values = response.body
+ *   .pipeThrough(new JSONTextSelectorStream('$.items[*]'));
+ */
 class JSONTextSelectorStream extends TransformStream<Uint8Array, Value> {
+  /**
+   * @param query - A JSONPath-like query string.
+   * @param options - Decoder and queuing strategy options.
+   * @throws {SyntaxError} If `query` is not a valid query expression.
+   */
   constructor(query: string, options?: JSONTextSelectorStreamOptions) {
     const { writableStrategy, readableStrategy, ...rest } = options ?? {};
     const decoder = new Decoder(new Uint8Array(), { ...DEFAULT_DECODER_OPTIONS, ...rest });

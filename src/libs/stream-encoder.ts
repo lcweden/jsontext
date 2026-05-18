@@ -8,7 +8,25 @@ type JSONTextEncoderStreamOptions = EncoderOptions & {
   readableStrategy?: QueuingStrategy<Uint8Array>;
 };
 
+/**
+ * A `TransformStream` that encodes a stream of {@link Token} objects into
+ * a stream of `Uint8Array` byte chunks.
+ *
+ * Writable side accepts {@link Token} objects. Readable side emits the
+ * corresponding JSON bytes, flushing output as tokens are written.
+ *
+ * @example
+ * const { readable, writable } = new JSONTextEncoderStream();
+ * const writer = writable.getWriter();
+ * writer.write(Token.ARRAY_BEGIN);
+ * writer.write(Token.fromNumber(1));
+ * writer.write(Token.ARRAY_END);
+ * writer.close();
+ */
 class JSONTextEncoderStream extends TransformStream<Token, Uint8Array> {
+  /**
+   * @param options - Encoder and queuing strategy options.
+   */
   constructor(options?: JSONTextEncoderStreamOptions) {
     const { writableStrategy, readableStrategy, ...rest } = options ?? {};
     const encoder = new Encoder({ ...DEFAULT_ENCODER_OPTIONS, ...rest });

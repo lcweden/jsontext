@@ -8,7 +8,22 @@ type JSONTextDecoderStreamOptions = DecoderOptions & {
   readableStrategy?: QueuingStrategy<Token>;
 };
 
+/**
+ * A `TransformStream` that decodes a stream of `Uint8Array` byte chunks into
+ * a stream of {@link Token} objects.
+ *
+ * Writable side accepts raw JSON bytes (possibly split across multiple chunks).
+ * Readable side emits one {@link Token} per JSON token in document order.
+ *
+ * @example
+ * const response = await fetch(url);
+ * const tokens = response.body
+ *   .pipeThrough(new JSONTextDecoderStream());
+ */
 class JSONTextDecoderStream extends TransformStream<Uint8Array, Token> {
+  /**
+   * @param options - Decoder and queuing strategy options.
+   */
   constructor(options: JSONTextDecoderStreamOptions = {}) {
     const { writableStrategy, readableStrategy, ...rest } = options;
     const decoderOptions = { ...DEFAULT_DECODER_OPTIONS, ...rest };
