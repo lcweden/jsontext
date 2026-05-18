@@ -14,7 +14,7 @@ Deno.test("[integration] JSONTextDecoderStream", async (test) => {
       await writer.close();
     })().catch(() => {});
 
-    for await (const token of stream) {
+    for await (const token of stream.readable) {
       tokens.push(token);
     }
 
@@ -33,7 +33,7 @@ Deno.test("[integration] JSONTextDecoderStream", async (test) => {
     })().catch(() => {});
 
     await assertRejects(async () => {
-      for await (const _ of stream) { /* drain */ }
+      for await (const _ of stream.readable) { /* drain */ }
     });
 
     await writing;
@@ -49,7 +49,7 @@ Deno.test("[integration] JSONTextDecoderStream", async (test) => {
     })().catch(() => {});
 
     await assertRejects(async () => {
-      for await (const _ of stream) { /* drain */ }
+      for await (const _ of stream.readable) { /* drain */ }
     });
 
     await writing;

@@ -1,11 +1,9 @@
-import type Pointer from "#src/modules/pointer";
-
 class SyntacticError extends SyntaxError {
-  pointer: Pointer;
+  pointer: string;
   offset: number;
 
-  constructor(message: string, pointer: Pointer, offset: number) {
-    const within = pointer.toString() ? ` within ${pointer.toString()}` : "";
+  constructor(message: string, pointer: string, offset: number) {
+    const within = pointer ? ` within ${pointer}` : "";
     const at = ` at offset ${offset}`;
 
     super(`${message}${within}${at}`);

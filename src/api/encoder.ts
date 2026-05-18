@@ -17,12 +17,20 @@ class JSONTextEncoder {
     return this.#encoder.bytes();
   }
 
+  depth(): number {
+    return this.#encoder.depth();
+  }
+
   outputOffset(): number {
     return this.#encoder.outputOffset();
   }
 
-  stackPointer(where: 0 | 1 | -1 = 1) {
-    return this.#encoder.stackPointer(where);
+  reset(): void {
+    this.#encoder.reset();
+  }
+
+  stackPointer(where: 0 | 1 | -1 = 1): string {
+    return this.#encoder.stackPointer(where).toString();
   }
 
   writeToken(token: Token): void {

@@ -63,6 +63,20 @@ class Token {
     return token;
   }
 
+  static NULL = Token.fromText("null");
+
+  static TRUE = Token.fromBoolean(true);
+
+  static FALSE = Token.fromBoolean(false);
+
+  static OBJECT_BEGIN = Token.fromText("{");
+
+  static OBJECT_END = Token.fromText("}");
+
+  static ARRAY_BEGIN = Token.fromText("[");
+
+  static ARRAY_END = Token.fromText("]");
+
   clone(): Token {
     return new Token(this.bytes.slice());
   }

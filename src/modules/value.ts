@@ -1,5 +1,6 @@
-import { ASCII, KIND } from "#src/common/constants";
+import { ASCII, DEFAULT_DECODER_OPTIONS, KIND } from "#src/common/constants";
 import Decoder from "#src/modules/decoder";
+import type Token from "#src/modules/token";
 import type { Kind } from "#src/types/kind";
 import { normalize } from "#src/utils/kind";
 import { decodeText, encodeText } from "#src/utils/text";
@@ -38,6 +39,13 @@ class Value {
     return this.#bytes;
   }
 
+  static from(input: unknown): Value {
+    const json = JSON.stringify(input);
+    const encoded = encodeText(json);
+
+    return new Value(encoded);
+  }
+
   canonicalize(): Value {
     const decoder = new Decoder(this.#bytes, { allowDuplicateNames: true });
     decoder.end();
@@ -69,8 +77,26 @@ class Value {
     }
   }
 
-  toText(): string {
+  json(): unknown {
+    return JSON.parse(this.text());
+  }
+
+  text(): string {
     return decodeText(this.bytes, { fatal: true });
+  }
+
+  *tokens(): Generator<Token> {
+    const decoder = new Decoder(this.bytes, DEFAULT_DECODER_OPTIONS);
+
+    while (true) {
+      const token = decoder.readToken();
+
+      if (token === undefined) {
+        break;
+      }
+
+      yield token;
+    }
   }
 
   #processValue(decoder: Decoder): Uint8Array {

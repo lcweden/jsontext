@@ -3,6 +3,8 @@ import {
   JSONTextDecoderStream,
   JSONTextEncoder,
   JSONTextEncoderStream,
+  JSONTextSelectorStream,
+  Token,
 } from "#src/index";
 import { decodeText } from "#src/utils/text";
 import { assertEquals } from "#std/assert";
@@ -53,5 +55,42 @@ Deno.test("[e2e] round-trip", async (test) => {
       JSON.parse(decodeText(output)),
       JSON.parse(decodeText(await Deno.readFile(HAR_URL))),
     );
+  });
+
+  await test.step("should round-trip example.com.har through selector pipeline", async () => {
+    const chunks: Uint8Array[] = [];
+    const file = await Deno.open(HAR_URL, { read: true });
+    const stream = file.readable
+      .pipeThrough(new JSONTextSelectorStream("$..headers"))
+      .pipeThrough(
+        new TransformStream({
+          start(controller) {
+            controller.enqueue(Token.ARRAY_BEGIN);
+          },
+          transform(value, controller) {
+            for (const token of value.tokens()) {
+              controller.enqueue(token);
+            }
+          },
+          flush(controller) {
+            controller.enqueue(Token.ARRAY_END);
+          },
+        }),
+      )
+      .pipeThrough(new JSONTextEncoderStream({ multiline: true, spaceAfterColon: false }));
+
+    for await (const chunk of stream) {
+      chunks.push(chunk);
+    }
+
+    const output = new Uint8Array(chunks.reduce((acc, c) => acc + c.length, 0));
+    let offset = 0;
+
+    for (const chunk of chunks) {
+      output.set(chunk, offset);
+      offset += chunk.length;
+    }
+
+    assertEquals(JSON.parse(decodeText(output)).length, 2);
   });
 });

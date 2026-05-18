@@ -44,7 +44,7 @@ Deno.test("[e2e] streaming readValue", async (test) => {
           break;
         }
 
-        values.push(value.toText());
+        values.push(value.text());
       }
     }
 

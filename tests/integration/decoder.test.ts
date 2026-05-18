@@ -110,7 +110,7 @@ Deno.test("[integration] JSONTextDecoder", async (test) => {
       const value = decoder.readValue();
 
       assertEquals(value?.kind, KIND.NUMBER);
-      assertEquals(value?.toText(), "42");
+      assertEquals(value?.text(), "42");
     });
 
     await test.step("should read a nested array as one value", () => {
@@ -123,7 +123,7 @@ Deno.test("[integration] JSONTextDecoder", async (test) => {
       const value = decoder.readValue();
 
       assertEquals(value?.kind, KIND.ARRAY_BEGIN);
-      assertEquals(value?.toText(), "[1,2]");
+      assertEquals(value?.text(), "[1,2]");
     });
 
     await test.step("should read a nested object as one value", () => {
@@ -136,7 +136,7 @@ Deno.test("[integration] JSONTextDecoder", async (test) => {
       const value = decoder.readValue();
 
       assertEquals(value?.kind, KIND.OBJECT_BEGIN);
-      assertEquals(value?.toText(), '{"a":1}');
+      assertEquals(value?.text(), '{"a":1}');
     });
 
     await test.step("should read elements inside an outer array one at a time", () => {
@@ -147,8 +147,8 @@ Deno.test("[integration] JSONTextDecoder", async (test) => {
       decoder.end();
       decoder.readToken();
 
-      assertEquals(decoder.readValue()?.toText(), "1");
-      assertEquals(decoder.readValue()?.toText(), '"two"');
+      assertEquals(decoder.readValue()?.text(), "1");
+      assertEquals(decoder.readValue()?.text(), '"two"');
       assertEquals(decoder.readValue()?.kind, KIND.ARRAY_BEGIN);
 
       decoder.readToken();
@@ -195,7 +195,7 @@ Deno.test("[integration] JSONTextDecoder", async (test) => {
       decoder.readToken();
       decoder.skipValue();
 
-      assertEquals(decoder.readValue()?.toText(), "2");
+      assertEquals(decoder.readValue()?.text(), "2");
     });
 
     await test.step("should skip a nested structure and allow reading the next value", () => {
@@ -207,7 +207,7 @@ Deno.test("[integration] JSONTextDecoder", async (test) => {
       decoder.readToken();
 
       decoder.skipValue();
-      assertEquals(decoder.readValue()?.toText(), "3");
+      assertEquals(decoder.readValue()?.text(), "3");
     });
   });
 
@@ -241,8 +241,8 @@ Deno.test("[integration] JSONTextDecoder", async (test) => {
       decoder.push(encoded.subarray(2));
       decoder.end();
 
-      assertEquals(decoder.readValue()?.toText(), "1");
-      assertEquals(decoder.readValue()?.toText(), "2");
+      assertEquals(decoder.readValue()?.text(), "1");
+      assertEquals(decoder.readValue()?.text(), "2");
     });
   });
 

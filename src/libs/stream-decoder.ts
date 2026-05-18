@@ -3,56 +3,51 @@ import Decoder from "#src/modules/decoder";
 import type Token from "#src/modules/token";
 import type { DecoderOptions } from "#src/types/options";
 
-type JSONTextDecoderStreamOptions = DecoderOptions;
+type JSONTextDecoderStreamOptions = DecoderOptions & {
+  writableStrategy?: QueuingStrategy<Uint8Array>;
+  readableStrategy?: QueuingStrategy<Token>;
+};
 
 class JSONTextDecoderStream extends TransformStream<Uint8Array, Token> {
-  constructor(options?: JSONTextDecoderStreamOptions) {
-    const decoder = new Decoder(new Uint8Array(), { ...DEFAULT_DECODER_OPTIONS, ...options });
+  constructor(options: JSONTextDecoderStreamOptions = {}) {
+    const { writableStrategy, readableStrategy, ...rest } = options;
+    const decoderOptions = { ...DEFAULT_DECODER_OPTIONS, ...rest };
+    const decoder = new Decoder(new Uint8Array(), decoderOptions);
 
-    super({
-      transform(chunk, controller) {
-        try {
-          decoder.push(chunk);
+    super(
+      {
+        transform(chunk, controller) {
+          try {
+            decoder.push(chunk);
 
-          let token;
+            let token;
 
-          while ((token = decoder.readToken()) !== undefined) {
-            controller.enqueue(token);
+            while ((token = decoder.readToken()) !== undefined) {
+              controller.enqueue(token);
+            }
+          } catch (error) {
+            controller.error(error);
           }
-        } catch (error) {
-          controller.error(error);
-        }
-      },
-      flush(controller) {
-        try {
-          decoder.end();
+        },
+        flush(controller) {
+          try {
+            decoder.end();
 
-          let token;
+            let token;
 
-          while ((token = decoder.readToken()) !== undefined) {
-            controller.enqueue(token);
+            while ((token = decoder.readToken()) !== undefined) {
+              controller.enqueue(token);
+            }
+
+            decoder.checkEOF();
+          } catch (error) {
+            controller.error(error);
           }
-
-          decoder.checkEOF();
-        } catch (error) {
-          controller.error(error);
-        }
+        },
       },
-    });
-  }
-
-  async *[Symbol.asyncIterator](): AsyncIterableIterator<Token> {
-    const reader = this.readable.getReader();
-
-    try {
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        yield value;
-      }
-    } finally {
-      reader.releaseLock();
-    }
+      writableStrategy,
+      readableStrategy,
+    );
   }
 }
 

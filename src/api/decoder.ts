@@ -18,6 +18,10 @@ class JSONTextDecoder {
     this.#decoder.checkEOF();
   }
 
+  depth(): number {
+    return this.#decoder.depth();
+  }
+
   end(): void {
     this.#decoder.end();
   }
@@ -34,6 +38,10 @@ class JSONTextDecoder {
     return this.#decoder.peekKind();
   }
 
+  reset(): void {
+    this.#decoder.reset();
+  }
+
   readToken(): Token | undefined {
     return this.#decoder.readToken();
   }
@@ -42,12 +50,12 @@ class JSONTextDecoder {
     return this.#decoder.readValue();
   }
 
-  skipValue(): void {
-    this.#decoder.skipValue();
+  skipValue(): boolean {
+    return this.#decoder.skipValue();
   }
 
-  stackPointer(where: 0 | 1 | -1 = 1) {
-    return this.#decoder.stackPointer(where);
+  stackPointer(where: 0 | 1 | -1 = 1): string {
+    return this.#decoder.stackPointer(where).toString();
   }
 
   unreadBytes(): Uint8Array {
