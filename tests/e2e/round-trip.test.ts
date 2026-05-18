@@ -5,7 +5,7 @@ import { assert, assertEquals } from "#std/assert";
 const GITHUB_TOKEN = Deno.env.get("GITHUB_TOKEN");
 const FIXTURE_BASE = "https://github.com/lcweden/jsontext/releases/download/fixtures";
 
-Deno.test("[e2e] path", async (test) => {
+Deno.test("[e2e] round-trip", async (test) => {
   await test.step("[fixture] json_bus.json.gz", async (test) => {
     await test.step("should emit object values from $.features[*]", async () => {
       const input = `${FIXTURE_BASE}/json_bus.json.gz`;
