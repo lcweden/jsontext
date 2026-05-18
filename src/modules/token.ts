@@ -51,10 +51,10 @@ class Token {
   static NULL = Token.fromText("null");
 
   /** Pre-built `true` token. */
-  static TRUE = Token.fromBoolean(true);
+  static TRUE = Token.fromText("true");
 
   /** Pre-built `false` token. */
-  static FALSE = Token.fromBoolean(false);
+  static FALSE = Token.fromText("false");
 
   /** Pre-built `{` token. */
   static OBJECT_BEGIN = Token.fromText("{");
