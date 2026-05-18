@@ -6,7 +6,7 @@ const FIXTURE_BASE = "https://github.com/lcweden/jsontext/releases/download/fixt
 
 Deno.test("[e2e] streaming", async (test) => {
   await test.step("[fixture] json_bus.json.gz", async (test) => {
-    await test.step("should stream 75 MB without error", async () => {
+    await test.step("should stream without error", async () => {
       const input = `${FIXTURE_BASE}/json_bus.json.gz`;
       const headers = new Headers({ "Accept": "application/octet-stream" });
 
@@ -35,7 +35,7 @@ Deno.test("[e2e] streaming", async (test) => {
   });
 
   await test.step("[fixture] www.youtube.com.har.gz", async (test) => {
-    await test.step("should stream 131 MB without error", async () => {
+    await test.step("should stream without error", async () => {
       const input = `${FIXTURE_BASE}/www.youtube.com.har.gz`;
       const headers = new Headers({ "Accept": "application/octet-stream" });
 
