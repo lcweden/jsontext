@@ -21,7 +21,7 @@ class JSONTextDecoder {
    * @param bytes - Initial bytes to pre-load into the decoder.
    * @param options - Decoding options.
    */
-  constructor(bytes = new Uint8Array(), options?: JSONTextDecoderOptions) {
+  constructor(bytes: Uint8Array = new Uint8Array(), options?: JSONTextDecoderOptions) {
     this.#decoder = new Decoder(bytes, { ...DEFAULT_DECODER_OPTIONS, ...options });
   }
 

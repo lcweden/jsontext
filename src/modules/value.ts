@@ -51,12 +51,12 @@ class Value {
   }
 
   /** The {@link Kind} of the top-level token of this value. */
-  get kind() {
+  get kind(): Kind {
     return this.#kind;
   }
 
   /** The raw UTF-8 bytes of this value, including any leading whitespace. */
-  get bytes() {
+  get bytes(): Uint8Array {
     return this.#bytes;
   }
 
