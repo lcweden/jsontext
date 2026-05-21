@@ -13,6 +13,10 @@ class ObjectNameStack {
     return this.#names[depth] ?? "";
   }
 
+  getLast(): string {
+    return this.#names[this.#names.length - 1] ?? "";
+  }
+
   pushObject(): void {
     this.#names.push("");
   }

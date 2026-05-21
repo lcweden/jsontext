@@ -55,6 +55,14 @@ class Decoder {
     return this.#cursor.previousOffsetEnd();
   }
 
+  needObjectName(): boolean {
+    return this.#state.needObjectName();
+  }
+
+  lastObjectName(): string {
+    return this.#state.lastObjectName();
+  }
+
   push(bytes: Uint8Array): void {
     this.#cursor.appendBytes(bytes);
   }
@@ -190,7 +198,7 @@ class Decoder {
     this.#cursor.previousStart = start;
     this.#cursor.previousEnd = start + size;
 
-    return new Token(this.#cursor.previousBytes().slice());
+    return new Token(this.#cursor.previousBytes());
   }
 
   readValue(): Value | undefined {
@@ -211,7 +219,7 @@ class Decoder {
 
     if (kind === KIND.OBJECT_BEGIN || kind === KIND.ARRAY_BEGIN) {
       try {
-        JSON.parse(decodeText(bytes, { fatal: !this.#options.allowInvalidUTF8 }));
+        JSON.parse(decodeText(bytes, !this.#options.allowInvalidUTF8));
       } catch (error) {
         if (error instanceof Error) {
           this.#cursor.peekError = error;
@@ -222,7 +230,7 @@ class Decoder {
     }
 
     if (kind === KIND.STRING) {
-      const decoded = decodeText(bytes, { fatal: !this.#options.allowInvalidUTF8 });
+      const decoded = decodeText(bytes, !this.#options.allowInvalidUTF8);
       const parsed = JSON.parse(decoded);
 
       if (this.#state.needObjectName()) {
@@ -240,11 +248,33 @@ class Decoder {
     this.#cursor.previousStart = start;
     this.#cursor.previousEnd = start + size;
 
-    return new Value(bytes.slice());
+    return new Value(bytes);
   }
 
   skipValue(): boolean {
-    return this.readValue() !== undefined;
+    const kind = this.peekKind();
+
+    if (kind === undefined) {
+      return false;
+    }
+
+    if (kind !== KIND.OBJECT_BEGIN && kind !== KIND.ARRAY_BEGIN) {
+      return this.readToken() !== undefined;
+    }
+
+    const start = this.#cursor.peekPosition;
+    const size = this.#consumeValue(start);
+
+    if (size === 0) {
+      return false;
+    }
+
+    this.#cursor.peekPosition = 0;
+    this.#cursor.previousStart = start;
+    this.#cursor.previousEnd = start + size;
+    this.#state.appendLiteral();
+
+    return true;
   }
 
   stackPointer(where: 0 | 1 | -1 = 1): Pointer {
@@ -407,7 +437,7 @@ class Decoder {
 
     if (this.#state.needObjectName()) {
       const bytes = this.#cursor.bytes.subarray(start, start + size);
-      const decoded = decodeText(bytes, { fatal: !this.#options.allowInvalidUTF8 });
+      const decoded = decodeText(bytes, !this.#options.allowInvalidUTF8);
       const string = JSON.parse(decoded);
 
       this.#state.setLast(string);

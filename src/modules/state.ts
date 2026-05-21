@@ -45,6 +45,10 @@ class State {
     return this.#automaton.last.needObjectValue();
   }
 
+  lastObjectName(): string {
+    return this.#names.getLast();
+  }
+
   pushArray(): void {
     this.#automaton.pushArray();
   }
