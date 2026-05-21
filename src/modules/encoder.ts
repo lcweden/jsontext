@@ -13,11 +13,19 @@ class Encoder {
   #tape: Tape;
   #state: State;
   #options: EncoderOptions;
+  #cache: Record<string, Uint8Array | null>;
 
   constructor(options: EncoderOptions) {
     this.#tape = new Tape();
     this.#state = new State(options);
     this.#options = options;
+    this.#cache = {
+      "null_bytes": encodeText("null"),
+      "true_bytes": encodeText("true"),
+      "false_bytes": encodeText("false"),
+      "indent_bytes": encodeText(options.indent ?? "\t"),
+      "indent_prefix_bytes": options.indentPrefix ? encodeText(options.indentPrefix) : null,
+    };
   }
 
   bytes(): Uint8Array {
@@ -60,15 +68,15 @@ class Encoder {
 
       switch (token.kind) {
         case KIND.NULL:
-          this.#tape.appendBytes(encodeText("null"));
+          this.#tape.appendBytes(this.#cache.null_bytes!);
           this.#state.appendLiteral();
           break;
         case KIND.TRUE:
-          this.#tape.appendBytes(encodeText("true"));
+          this.#tape.appendBytes(this.#cache.true_bytes!);
           this.#state.appendLiteral();
           break;
         case KIND.FALSE:
-          this.#tape.appendBytes(encodeText("false"));
+          this.#tape.appendBytes(this.#cache.false_bytes!);
           this.#state.appendLiteral();
           break;
         case KIND.STRING: {
@@ -77,7 +85,7 @@ class Encoder {
           this.#tape.appendBytes(bytes);
 
           if (this.#state.needObjectName()) {
-            const decoded = decodeText(bytes, { fatal: !this.#options.allowInvalidUTF8 });
+            const decoded = decodeText(bytes, !this.#options.allowInvalidUTF8);
             const parsed = JSON.parse(decoded);
 
             this.#state.setLast(parsed);
@@ -90,7 +98,7 @@ class Encoder {
           let bytes = token.bytes;
 
           if (this.#options.canonicalizeRawNumbers) {
-            const decoded = decodeText(bytes, { fatal: !this.#options.allowInvalidUTF8 });
+            const decoded = decodeText(bytes, !this.#options.allowInvalidUTF8);
             const parsed = JSON.parse(decoded);
             const encoded = encodeText(String(parsed));
 
@@ -154,7 +162,7 @@ class Encoder {
       if (value.kind === KIND.STRING) {
         bytes = this.#encodeText(bytes);
       } else if (value.kind === KIND.NUMBER && this.#options.canonicalizeRawNumbers) {
-        const decoded = decodeText(bytes, { fatal: !this.#options.allowInvalidUTF8 });
+        const decoded = decodeText(bytes, !this.#options.allowInvalidUTF8);
         const parsed = JSON.parse(decoded);
         const encoded = encodeText(String(parsed));
 
@@ -171,7 +179,7 @@ class Encoder {
           break;
         case KIND.STRING: {
           if (this.#state.needObjectName()) {
-            const decoded = decodeText(bytes, { fatal: !this.#options.allowInvalidUTF8 });
+            const decoded = decodeText(bytes, !this.#options.allowInvalidUTF8);
             const parsed = JSON.parse(decoded);
 
             this.#state.setLast(parsed);
@@ -234,14 +242,14 @@ class Encoder {
 
       this.#tape.appendByte(ASCII.LINE_FEED);
 
-      if (this.#options.indentPrefix) {
-        this.#tape.appendBytes(encodeText(this.#options.indentPrefix));
+      if (this.#options.indentPrefix && this.#cache["indent_prefix_bytes"]) {
+        this.#tape.appendBytes(this.#cache["indent_prefix_bytes"]);
       }
 
-      const indentBytes = encodeText(this.#options.indent ?? "\t");
-
       for (let i = 0; i < levels; i++) {
-        this.#tape.appendBytes(indentBytes);
+        if (this.#cache["indent_bytes"]) {
+          this.#tape.appendBytes(this.#cache["indent_bytes"]);
+        }
       }
     }
   }
@@ -249,13 +257,13 @@ class Encoder {
   #encodeText(bytes: Uint8Array): Uint8Array {
     if (!this.#options.escapeForHTML && !this.#options.escapeForJS) {
       if (!this.#options.allowInvalidUTF8) {
-        decodeText(bytes, { fatal: true });
+        decodeText(bytes, true);
       }
 
       return bytes;
     }
 
-    const decoded = decodeText(bytes, { fatal: !this.#options.allowInvalidUTF8 });
+    const decoded = decodeText(bytes, !this.#options.allowInvalidUTF8);
     const parsed = JSON.parse(decoded);
     let encoded = JSON.stringify(parsed);
 
