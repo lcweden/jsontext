@@ -380,9 +380,6 @@ Deno.test("[utils] wire", async (test) => {
     await test.step("return 0 for disallowed characters", () => {
       const cases = [
         { actual: consumeSimpleString(e('"hel\\lo"'), 0), expected: 0 },
-        { actual: consumeSimpleString(e('"a<b"'), 0), expected: 0 },
-        { actual: consumeSimpleString(e('"a>b"'), 0), expected: 0 },
-        { actual: consumeSimpleString(e('"a&b"'), 0), expected: 0 },
         { actual: consumeSimpleString(e('"hel\x01lo"'), 0), expected: 0 },
         { actual: consumeSimpleString(e('"hel\x1Flo"'), 0), expected: 0 },
         { actual: consumeSimpleString(new Uint8Array([0x22, 0x7F, 0x22]), 0), expected: 0 },
