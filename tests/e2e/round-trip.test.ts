@@ -1,5 +1,5 @@
-import { KIND } from "#src/common/constants";
-import { JSONTextSelectorStream } from "#src/index";
+import { KIND } from "#src/common/constants.ts";
+import { JSONTextSelectorStream } from "#src/index.ts";
 import { assert, assertEquals } from "#std/assert";
 
 const GITHUB_TOKEN = Deno.env.get("GITHUB_TOKEN");

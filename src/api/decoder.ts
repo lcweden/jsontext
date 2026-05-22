@@ -1,9 +1,9 @@
-import { DEFAULT_DECODER_OPTIONS } from "#src/common/constants";
-import Decoder from "#src/modules/decoder";
-import type Token from "#src/modules/token";
-import type Value from "#src/modules/value";
-import type { Kind } from "#src/types/kind";
-import type { DecoderOptions } from "#src/types/options";
+import { DEFAULT_DECODER_OPTIONS } from "#src/common/constants.ts";
+import Decoder from "#src/modules/decoder.ts";
+import type Token from "#src/modules/token.ts";
+import type Value from "#src/modules/value.ts";
+import type { Kind } from "#src/types/kind.ts";
+import type { DecoderOptions } from "#src/types/options.ts";
 
 type JSONTextDecoderOptions = DecoderOptions;
 

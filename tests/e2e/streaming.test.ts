@@ -1,4 +1,4 @@
-import { JSONTextDecoderStream } from "#src/index";
+import { JSONTextDecoderStream } from "#src/index.ts";
 import { assert } from "#std/assert";
 
 const GITHUB_TOKEN = Deno.env.get("GITHUB_TOKEN");

@@ -1,6 +1,6 @@
-import State from "#src/modules/state";
+import { KIND, MAX_NESTING_DEPTH } from "#src/common/constants.ts";
+import State from "#src/modules/state.ts";
 import { assertEquals, assertExists, assertThrows } from "#std/assert";
-import { KIND, MAX_NESTING_DEPTH } from "../src/common/constants.ts";
 
 Deno.test("[module] state", async (test) => {
   await test.step("[function] constructor", async (test) => {

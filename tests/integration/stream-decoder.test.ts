@@ -1,6 +1,6 @@
-import { JSONTextDecoderStream } from "#src/index";
-import type Token from "#src/modules/token";
-import { encodeText } from "#src/utils/text";
+import { JSONTextDecoderStream } from "#src/index.ts";
+import type Token from "#src/modules/token.ts";
+import { encodeText } from "#src/utils/text.ts";
 import { assertEquals, assertRejects } from "#std/assert";
 
 Deno.test("[integration] JSONTextDecoderStream", async (test) => {

@@ -1,4 +1,4 @@
-import { IDENTIFIER, SEGMENT, SELECTOR } from "#src/common/constants";
+import { IDENTIFIER, SEGMENT, SELECTOR } from "#src/common/constants.ts";
 
 export type NameSelector = { type: typeof SELECTOR.NAME; name: string };
 

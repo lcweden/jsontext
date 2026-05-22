@@ -1,6 +1,6 @@
-import { MAX_NESTING_DEPTH } from "#src/common/constants";
-import Entry from "#src/modules/entry";
-import type { Kind } from "#src/types/kind";
+import { MAX_NESTING_DEPTH } from "#src/common/constants.ts";
+import Entry from "#src/modules/entry.ts";
+import type { Kind } from "#src/types/kind.ts";
 
 class Automaton {
   #last: Entry;

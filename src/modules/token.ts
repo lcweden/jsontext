@@ -1,7 +1,7 @@
-import { KIND } from "#src/common/constants";
-import type { Kind } from "#src/types/kind";
-import { normalize } from "#src/utils/kind";
-import { decodeText, encodeText } from "#src/utils/text";
+import { KIND } from "#src/common/constants.ts";
+import type { Kind } from "#src/types/kind.ts";
+import { normalize } from "#src/utils/kind.ts";
+import { decodeText, encodeText } from "#src/utils/text.ts";
 
 /**
  * Represents a single JSON token.
