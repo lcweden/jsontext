@@ -2,34 +2,18 @@
   "compilerOptions": {
     "target": "esnext",
     "module": "esnext",
-    "lib": [
-      "ESNext",
-      "DOM"
-    ],
-    "types": [
-      "node",
-      "vite/client"
-    ],
-    "skipLibCheck": true,
+    "lib": ["ESNext", "DOM"],
+    "paths": { "#src/*": ["./src/*"] },
     "moduleResolution": "bundler",
-    "allowImportingTsExtensions": false,
+    "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true,
     "moduleDetection": "force",
+    "skipLibCheck": true,
     "noEmit": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true,
-    "paths": {
-      "#src/*": ["./src/*"]
-    }
+    "erasableSyntaxOnly": true
   },
-  "include": [
-    "src",
-    "web",
-    "tests"
-  ],
-  "exclude": [
-    "tests/"
-  ]
+  "include": ["src", "web"]
 }

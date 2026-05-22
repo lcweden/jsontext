@@ -1,6 +1,6 @@
-import { KIND } from "#src/common/constants";
-import Value from "#src/modules/value";
-import { encodeText as e } from "#src/utils/text";
+import { KIND } from "#src/common/constants.ts";
+import Value from "#src/modules/value.ts";
+import { encodeText as e } from "#src/utils/text.ts";
 import { assertEquals, assertFalse, assertThrows } from "#std/assert";
 
 Deno.test("[module] value", async (test) => {

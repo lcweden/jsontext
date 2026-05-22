@@ -1,14 +1,14 @@
-import { ASCII, KIND } from "#src/common/constants";
-import { SyntacticError } from "#src/common/errors";
-import Cursor from "#src/modules/cursor";
-import type Pointer from "#src/modules/pointer";
-import State from "#src/modules/state";
-import Token from "#src/modules/token";
-import Value from "#src/modules/value";
-import type { Kind } from "#src/types/kind";
-import type { DecoderOptions } from "#src/types/options";
-import { normalize } from "#src/utils/kind";
-import { decodeText } from "#src/utils/text";
+import { ASCII, KIND } from "#src/common/constants.ts";
+import { SyntacticError } from "#src/common/errors.ts";
+import Cursor from "#src/modules/cursor.ts";
+import type Pointer from "#src/modules/pointer.ts";
+import State from "#src/modules/state.ts";
+import Token from "#src/modules/token.ts";
+import Value from "#src/modules/value.ts";
+import type { Kind } from "#src/types/kind.ts";
+import type { DecoderOptions } from "#src/types/options.ts";
+import { normalize } from "#src/utils/kind.ts";
+import { decodeText } from "#src/utils/text.ts";
 import {
   consumeFalse,
   consumeNull,
@@ -18,7 +18,7 @@ import {
   consumeString,
   consumeTrue,
   consumeWhitespace,
-} from "#src/utils/wire";
+} from "#src/utils/wire.ts";
 
 class Decoder {
   #cursor: Cursor;

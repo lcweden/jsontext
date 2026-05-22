@@ -1,13 +1,13 @@
-import { ASCII, KIND, UNICODE } from "#src/common/constants";
-import { SyntacticError } from "#src/common/errors";
-import type Pointer from "#src/modules/pointer";
-import State from "#src/modules/state";
-import Tape from "#src/modules/tape";
-import Token from "#src/modules/token";
-import Value from "#src/modules/value";
-import type { Kind } from "#src/types/kind";
-import type { EncoderOptions } from "#src/types/options";
-import { decodeText, encodeText } from "#src/utils/text";
+import { ASCII, KIND, UNICODE } from "#src/common/constants.ts";
+import { SyntacticError } from "#src/common/errors.ts";
+import type Pointer from "#src/modules/pointer.ts";
+import State from "#src/modules/state.ts";
+import Tape from "#src/modules/tape.ts";
+import Token from "#src/modules/token.ts";
+import Value from "#src/modules/value.ts";
+import type { Kind } from "#src/types/kind.ts";
+import type { EncoderOptions } from "#src/types/options.ts";
+import { decodeText, encodeText } from "#src/utils/text.ts";
 
 class Encoder {
   #tape: Tape;
