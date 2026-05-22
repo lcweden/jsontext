@@ -1,123 +1,91 @@
 import { ASCII, SEGMENT, SELECTOR } from "#src/common/constants";
-import type { Segment, Selector } from "#src/types/path";
+import type {
+  ArraySliceSelector,
+  IndexSelector,
+  NameSelector,
+  Segment,
+  Selector,
+  WildcardSelector,
+} from "#src/types/path";
 import { decodeText } from "#src/utils/text";
 import { consumeNumber, consumeWhitespace } from "#src/utils/wire";
 
+/**
+ * Supports a subset of JSON Path syntax and provides an NFA-based matcher.
+ *
+ * Supported Components
+ * - **Root Identifier**: `$`
+ * - **Child Segment**: `.` or `[...]`
+ * - **Descendant Segment**: `..`
+ * - **Name Selector**: `.name` or `['name']`
+ * - **Wildcard Selector**: `.*` or `[*]`
+ * - **Index Selector (positive)**: `[1]`
+ * - **Array Slice Selector (positive)**: `[0:5]` or `[::2]`
+ *
+ * @see https://www.rfc-editor.org/rfc/rfc9535
+ * @internal
+ * @example
+ * const path = new Path(new TextEncoder().encode("$.store.book[0].title"));
+ */
 class Path {
   #bytes: Uint8Array;
-  #segments: Array<Segment>;
+  #segments: Segment[];
 
+  /**
+   * Creates a `Path` instance.
+   *
+   * @param bytes - JSON Path in UTF-8 encoded bytes.
+   * @throws {SyntaxError} If the path expression is invalid.
+   */
   constructor(bytes: Uint8Array) {
     this.#bytes = bytes;
     this.#segments = this.#parse(bytes);
   }
 
-  match(tokens: string[]): boolean {
-    if (this.#segments.length === 0) {
-      return tokens.length === 0;
-    }
-
-    return this.#match(tokens, 0, 0);
+  /**
+   * Creates a `Matcher` instance based on this path.
+   *
+   * @returns A `Matcher` instance that can be used to test JSON values against this path.
+   */
+  createMatcher(): Matcher {
+    return new Matcher(this.#segments);
   }
 
+  /**
+   * Returns the JSON Path as a string.
+   *
+   * @returns JSON Path in string format
+   */
   toString(): string {
     return decodeText(this.#bytes);
   }
 
-  #match(tokens: string[], segmentIndex: number, tokenIndex: number): boolean {
-    if (segmentIndex === this.#segments.length) {
-      return tokenIndex === tokens.length;
-    }
-
-    if (tokenIndex === tokens.length) {
-      return false;
-    }
-
-    const segment = this.#segments[segmentIndex];
-
-    switch (segment.type) {
-      case SEGMENT.CHILD: {
-        if (this.#isFulfilled(tokens[tokenIndex], segment.selectors)) {
-          return this.#match(tokens, segmentIndex + 1, tokenIndex + 1);
-        }
-
-        return false;
-      }
-      case SEGMENT.DESCENDANT: {
-        for (let index = tokenIndex; index < tokens.length; index++) {
-          if (this.#isFulfilled(tokens[index], segment.selectors)) {
-            if (this.#match(tokens, segmentIndex + 1, index + 1)) {
-              return true;
-            }
-          }
-        }
-
-        return false;
-      }
-    }
-  }
-
-  #isFulfilled(token: string, selectors: Selector[]): boolean {
-    for (const selector of selectors) {
-      if (selector.type === SELECTOR.WILDCARD) {
-        return true;
-      }
-
-      if (selector.type === SELECTOR.NAME) {
-        if (selector.value === token) {
-          return true;
-        }
-      }
-
-      if (selector.type === SELECTOR.INDEX) {
-        const index = Number.parseInt(token, 10);
-
-        if (!Number.isNaN(index) && index === selector.value) {
-          return true;
-        }
-      }
-
-      if (selector.type === SELECTOR.ARRAY_SLICE) {
-        const index = Number.parseInt(token, 10);
-
-        if (Number.isNaN(index)) {
-          continue;
-        }
-
-        const start = selector.start !== undefined ? selector.start : 0;
-        const step = selector.step !== undefined ? selector.step : 1;
-        const end = selector.end;
-
-        if (index < start) {
-          continue;
-        }
-
-        if (end !== undefined && index >= end) {
-          continue;
-        }
-
-        if ((index - start) % step === 0) {
-          return true;
-        }
-      }
-    }
-
-    return false;
-  }
-
-  #parse(bytes: Uint8Array): Array<Segment> {
-    let index = 0;
+  /**
+   * Parses the JSON Path expression from UTF-8 encoded bytes and constructs an array of `Segment` objects.
+   *
+   * @param bytes - JSON Path in UTF-8 encoded bytes.
+   * @returns An array of `Segment` objects representing the parsed path.
+   * @throws {SyntaxError} If the path expression is invalid.
+   */
+  #parse(bytes: Uint8Array): Segment[] {
+    let index: number = 0;
 
     index = consumeWhitespace(bytes, index);
 
-    if (index >= bytes.length || bytes[index] !== ASCII.DOLLAR_SIGN) {
-      throw new SyntaxError("path must start with '$'");
+    if (index >= bytes.length) {
+      throw new SyntaxError("unexpected end of input");
+    }
+
+    const byte: number = bytes[index];
+
+    if (byte !== ASCII.DOLLAR_SIGN) {
+      throw new SyntaxError(`path must start with '$'`);
     }
 
     index++;
 
     const segments: Segment[] = [];
-    let isDescendant = false;
+    let isDescendant: boolean = false;
 
     while (index < bytes.length) {
       index = consumeWhitespace(bytes, index);
@@ -126,7 +94,8 @@ class Path {
         break;
       }
 
-      const byte = bytes[index];
+      const type: Segment["type"] = isDescendant ? SEGMENT.DESCENDANT : SEGMENT.CHILD;
+      const byte: number = bytes[index];
 
       if (byte === ASCII.DOT) {
         index++;
@@ -140,12 +109,12 @@ class Path {
           throw new SyntaxError("unexpected end of path");
         }
 
-        const byte = bytes[index];
+        const byte: number = bytes[index];
 
         if (byte === ASCII.ASTERISK) {
-          const type = isDescendant ? SEGMENT.DESCENDANT : SEGMENT.CHILD;
-          const selectors = [{ type: SELECTOR.WILDCARD }];
-          const segment = { type, selectors };
+          const type: Segment["type"] = isDescendant ? SEGMENT.DESCENDANT : SEGMENT.CHILD;
+          const selector: WildcardSelector = { type: SELECTOR.WILDCARD };
+          const segment: Segment = { type, selectors: [selector] };
 
           segments.push(segment);
           isDescendant = false;
@@ -157,13 +126,13 @@ class Path {
 
           continue;
         } else {
-          const start = index;
+          const start: number = index;
           const isValidChar = (byte: number, index: number) => {
             if (
               (byte >= ASCII.UPPER_CASE_A && byte <= ASCII.UPPER_CASE_Z) ||
               (byte >= ASCII.LOWER_CASE_A && byte <= ASCII.LOWER_CASE_Z) ||
-              byte === 0x5f ||
-              byte >= 0x80
+              byte === ASCII.UNDERSCORE ||
+              byte >= ASCII.DELETE
             ) {
               return true;
             }
@@ -183,49 +152,40 @@ class Path {
             throw new SyntaxError("expected a name after '.'");
           }
 
-          const type = isDescendant ? SEGMENT.DESCENDANT : SEGMENT.CHILD;
-          const value = decodeText(bytes.subarray(start, index));
-          const selectors = [{ type: SELECTOR.NAME, value }];
-          const segment = { type, selectors };
+          const type: Segment["type"] = isDescendant ? SEGMENT.DESCENDANT : SEGMENT.CHILD;
+          const name: string = decodeText(bytes.subarray(start, index));
+          const selector: NameSelector = { type: SELECTOR.NAME, name };
+          const segment: Segment = { type, selectors: [selector] };
 
           segments.push(segment);
           isDescendant = false;
         }
       } else if (byte === ASCII.OPENING_BRACKET) {
-        const selectors = [];
+        const selectors: Selector[] = [];
 
         index++;
 
         while (index < bytes.length) {
           index = consumeWhitespace(bytes, index);
 
-          if (index >= bytes.length) {
-            break;
-          }
-
           const byte = bytes[index];
 
           if (byte === ASCII.CLOSING_BRACKET) {
-            if (selectors.length === 0) {
-              throw new SyntaxError("empty bracket selection is not allowed");
-            }
-
             break;
           }
 
           if (byte === ASCII.ASTERISK) {
-            const type = SELECTOR.WILDCARD;
-            const selector = { type };
+            const selector: WildcardSelector = { type: SELECTOR.WILDCARD };
 
             selectors.push(selector);
             index++;
-          } else if (byte === ASCII.SINGLE_QUOTE || byte === ASCII.QUOTE) {
-            const quote = byte;
+          } else if (byte === ASCII.QUOTE || byte === ASCII.SINGLE_QUOTE) {
+            const quote: number = byte;
 
             index++;
 
-            const start = index;
-            let inEscape = false;
+            const start: number = index;
+            let inEscape: boolean = false;
 
             while (index < bytes.length) {
               if (inEscape) {
@@ -253,9 +213,8 @@ class Path {
               throw new SyntaxError("unterminated string literal");
             }
 
-            const type = SELECTOR.NAME;
-            const value = decodeText(bytes.subarray(start, index));
-            const selector = { type, value };
+            const name: string = decodeText(bytes.subarray(start, index));
+            const selector: NameSelector = { type: SELECTOR.NAME, name };
 
             selectors.push(selector);
             index++;
@@ -264,8 +223,8 @@ class Path {
             (byte >= ASCII.DIGIT_0 && byte <= ASCII.DIGIT_9) ||
             byte === ASCII.COLON
           ) {
-            const size = consumeNumber(bytes, index);
-            let start;
+            const size: number = consumeNumber(bytes, index);
+            let start: number | undefined;
 
             if (size > 0) {
               start = Number.parseInt(decodeText(bytes.subarray(index, index + size)), 10);
@@ -283,18 +242,16 @@ class Path {
                 throw new SyntaxError("negative index is not supported");
               }
 
-              const type = SELECTOR.INDEX;
-              const value = start;
-              const selector = { type, value };
+              const selector: IndexSelector = { type: SELECTOR.INDEX, index: start };
 
               selectors.push(selector);
             } else if (index < bytes.length && bytes[index] === ASCII.COLON) {
               index++;
               index = consumeWhitespace(bytes, index);
 
-              const size = consumeNumber(bytes, index);
-              let end;
-              let step;
+              const size: number = consumeNumber(bytes, index);
+              let end: number | undefined;
+              let step: number | undefined;
 
               if (size > 0) {
                 end = Number.parseInt(decodeText(bytes.subarray(index, index + size)), 10);
@@ -307,7 +264,7 @@ class Path {
                 index++;
                 index = consumeWhitespace(bytes, index);
 
-                const size = consumeNumber(bytes, index);
+                const size: number = consumeNumber(bytes, index);
 
                 if (size > 0) {
                   step = Number.parseInt(decodeText(bytes.subarray(index, index + size)), 10);
@@ -327,8 +284,7 @@ class Path {
                 throw new SyntaxError("negative slice step is not supported");
               }
 
-              const type = SELECTOR.ARRAY_SLICE;
-              const selector = { type, start, end, step };
+              const selector: ArraySliceSelector = { type: SELECTOR.ARRAY_SLICE, start, end, step };
 
               selectors.push(selector);
             } else {
@@ -361,7 +317,6 @@ class Path {
 
         index++;
 
-        const type = isDescendant ? SEGMENT.DESCENDANT : SEGMENT.CHILD;
         const segment = { type, selectors };
 
         segments.push(segment);
@@ -375,4 +330,143 @@ class Path {
   }
 }
 
+/**
+ * NFA implementation for JSON Path matching.
+ *
+ * @internal
+ */
+class Matcher {
+  #segments: Segment[];
+  #stack: number[];
+  #mask: number;
+
+  /**
+   * Creates a `Matcher` instance.
+   *
+   * @param segments - An array of `Segment` objects representing the parsed JSON Path.
+   */
+  constructor(segments: Segment[]) {
+    // The maximum number of segments is limited to 30 to ensure that
+    // the bitmask can represent all states within a single 32-bit.
+    if (segments.length > 30) {
+      throw new RangeError(`path has too many segments (max 30)`);
+    }
+
+    this.#segments = segments;
+    this.#stack = [1];
+    this.#mask = 1 << segments.length;
+  }
+
+  /**
+   * Pushes a new step into the matcher state based on the current active states and the provided step.
+   *
+   * @param step JSON Object key or Array index.
+   */
+  push(step: string | number): void {
+    const current: number = this.#stack[this.#stack.length - 1];
+    let next: number = 0;
+
+    for (let i = 0; i < this.#segments.length; i++) {
+      const previous: number = 1 << i;
+
+      if ((current & previous) === 0) {
+        continue;
+      }
+
+      const segment: Segment = this.#segments[i];
+      let matches: boolean = false;
+
+      for (const selector of segment.selectors) {
+        if (selector.type === SELECTOR.WILDCARD) {
+          matches = true;
+
+          break;
+        }
+
+        if (selector.type === SELECTOR.NAME && typeof step === "string") {
+          if (selector.name === step) {
+            matches = true;
+
+            break;
+          }
+
+          continue;
+        }
+
+        if (selector.type === SELECTOR.INDEX && typeof step === "number") {
+          if (!Number.isNaN(step) && step === selector.index) {
+            matches = true;
+
+            break;
+          }
+
+          continue;
+        }
+
+        if (selector.type === SELECTOR.ARRAY_SLICE && typeof step === "number") {
+          if (Number.isNaN(step)) {
+            continue;
+          }
+
+          const start = selector.start !== undefined ? selector.start : 0;
+          const stride = selector.step !== undefined ? selector.step : 1;
+          const end = selector.end;
+
+          if (step < start) {
+            continue;
+          }
+
+          if (end !== undefined && step >= end) {
+            continue;
+          }
+
+          if ((step - start) % stride === 0) {
+            matches = true;
+
+            break;
+          }
+        }
+      }
+
+      if (segment.type === SEGMENT.DESCENDANT) {
+        next |= 1 << i;
+
+        if (matches) {
+          next |= 1 << (i + 1);
+        }
+      } else if (matches) {
+        next |= 1 << (i + 1);
+      }
+    }
+
+    this.#stack.push(next);
+  }
+
+  /**
+   * Pops the last step from the matcher state.
+   */
+  pop(): void {
+    this.#stack.pop();
+  }
+
+  /**
+   * Checks if the matcher is in an accepting state.
+   *
+   * @returns `true` if the matcher is accepting, `false` otherwise.
+   */
+  isAccepting(): boolean {
+    return (this.#stack[this.#stack.length - 1] & this.#mask) !== 0;
+  }
+
+  /**
+   * Checks if the matcher is in a dead state (i.e., no further transitions are possible).
+   *
+   * @returns `true` if the matcher is dead, `false` otherwise.
+   */
+  isDead(): boolean {
+    return this.#stack[this.#stack.length - 1] === 0;
+  }
+}
+
 export default Path;
+export type { Matcher };

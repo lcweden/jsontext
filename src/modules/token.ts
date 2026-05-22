@@ -189,7 +189,7 @@ class Token {
       throw new TypeError(`invalid JSON token kind: ${this.#kind}`);
     }
 
-    const decoded = decodeText(this.#bytes, { fatal: true });
+    const decoded = decodeText(this.#bytes, true);
     const result = JSON.parse(decoded);
 
     return result;
@@ -206,7 +206,7 @@ class Token {
       throw new TypeError(`invalid JSON token kind: ${this.#kind}`);
     }
 
-    const decoded = decodeText(this.#bytes, { fatal: true });
+    const decoded = decodeText(this.#bytes, true);
     const result = JSON.parse(decoded);
 
     return result;

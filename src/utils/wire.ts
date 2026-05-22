@@ -140,7 +140,7 @@ function consumeString(bytes: Uint8Array, position: number, validateUTF8 = true)
 
       if (validateUTF8) {
         try {
-          decodeText(chunk, { fatal: true });
+          decodeText(chunk, true);
         } catch (_error) {
           return 0;
         }
@@ -276,10 +276,7 @@ function consumeSimpleString(bytes: Uint8Array, position: number): number {
     if (
       byte < ASCII.SPACE ||
       byte >= ASCII.DELETE ||
-      byte === ASCII.BACKSLASH ||
-      byte === ASCII.OPEN_ANGLED_BRACKET ||
-      byte === ASCII.CLOSE_ANGLED_BRACKET ||
-      byte === ASCII.AMPERSAND
+      byte === ASCII.BACKSLASH
     ) {
       return 0;
     }

@@ -26,12 +26,14 @@ const ASCII = {
   COLON: 0x3A,
   OPEN_ANGLED_BRACKET: 0x3C,
   CLOSE_ANGLED_BRACKET: 0x3E,
+  AT_SIGN: 0x40,
   UPPER_CASE_A: 0x41,
   UPPER_CASE_E: 0x45,
   UPPER_CASE_Z: 0x5A,
   OPENING_BRACKET: 0x5B,
   BACKSLASH: 0x5C,
   CLOSING_BRACKET: 0x5D,
+  UNDERSCORE: 0x5F,
   LOWER_CASE_A: 0x61,
   LOWER_CASE_E: 0x65,
   LOWER_CASE_F: 0x66,
@@ -55,7 +57,7 @@ const UNICODE = {
   AMPERSAND: "\\u0026",
   LINE_SEPARATOR: "\\u2028",
   PARAGRAPH_SEPARATOR: "\\u2029",
-};
+} as const;
 
 const KIND = {
   NULL: "null",
@@ -69,7 +71,7 @@ const KIND = {
   ARRAY_END: "]",
 } as const;
 
-const MAX_NESTING_DEPTH = 10000;
+const MAX_NESTING_DEPTH = 10_000;
 
 const DEFAULT_DECODER_OPTIONS = {
   allowDuplicateNames: false,
@@ -87,22 +89,28 @@ const DEFAULT_ENCODER_OPTIONS = {
   indentPrefix: "",
 } as const;
 
-const SELECTOR = {
-  NAME: "NAME",
-  WILDCARD: "WILDCARD",
-  INDEX: "INDEX",
-  ARRAY_SLICE: "ARRAY_SLICE",
+const IDENTIFIER = {
+  ROOT: 0,
+  CURRENT: 1,
 } as const;
 
 const SEGMENT = {
-  CHILD: "CHILD",
-  DESCENDANT: "DESCENDANT",
+  CHILD: 0,
+  DESCENDANT: 1,
+} as const;
+
+const SELECTOR = {
+  NAME: 0,
+  WILDCARD: 1,
+  INDEX: 2,
+  ARRAY_SLICE: 3,
 } as const;
 
 export {
   ASCII,
   DEFAULT_DECODER_OPTIONS,
   DEFAULT_ENCODER_OPTIONS,
+  IDENTIFIER,
   KIND,
   MAX_NESTING_DEPTH,
   SEGMENT,

@@ -142,7 +142,7 @@ class Value {
    * @throws If the bytes contain invalid UTF-8 sequences.
    */
   text(): string {
-    return decodeText(this.bytes, { fatal: true });
+    return decodeText(this.bytes, true);
   }
 
   /**
@@ -181,7 +181,7 @@ class Value {
 
     if (kind === KIND.NUMBER) {
       const token = decoder.readToken()!;
-      const decoded = decodeText(token.bytes, { fatal: true });
+      const decoded = decodeText(token.bytes, true);
       const parsed = JSON.parse(decoded);
       const encoded = encodeText(String(parsed));
 
@@ -202,7 +202,7 @@ class Value {
       const token = decoder.readToken();
 
       if (token) {
-        const decoded = decodeText(token.bytes, { fatal: true });
+        const decoded = decodeText(token.bytes, true);
         const parsed = JSON.parse(decoded);
         const value = this.#processValue(decoder);
 

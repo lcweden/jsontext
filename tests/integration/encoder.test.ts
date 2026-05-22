@@ -66,7 +66,10 @@ Deno.test("[integration] JSONTextEncoder", async (test) => {
 
       encoder.writeToken(Token.fromText("{"));
 
-      const error = assertThrows(() => encoder.writeToken(Token.fromNumber(1)), SyntacticError);
+      const error = assertThrows(
+        () => encoder.writeToken(Token.fromNumber(1)),
+        SyntacticError,
+      ) as SyntacticError;
 
       assertEquals(error.offset, 1);
       assertEquals(error.pointer.toString(), "");

@@ -1,7 +1,6 @@
 import Path from "#src/modules/path";
-import Pointer from "#src/modules/pointer";
 import { encodeText } from "#src/utils/text";
-import { assert, assertFalse, assertThrows } from "#std/assert";
+import { assert, assertThrows } from "#std/assert";
 
 Deno.test("[module] path", async (test) => {
   await test.step("[function] constructor", async (test) => {
@@ -53,61 +52,6 @@ Deno.test("[module] path", async (test) => {
 
       for (const { fn } of cases) {
         assertThrows(fn);
-      }
-    });
-  });
-
-  await test.step("[function] match", async (test) => {
-    await test.step("should return true for matching paths", () => {
-      const cases = [
-        new Path(encodeText("$")).match(new Pointer([]).tokens),
-        new Path(encodeText("$.foo")).match(new Pointer(["foo"]).tokens),
-        new Path(encodeText("$.*")).match(new Pointer(["foo"]).tokens),
-        new Path(encodeText("$.*")).match(new Pointer(["0"]).tokens),
-        new Path(encodeText("$[2]")).match(new Pointer(["2"]).tokens),
-        new Path(encodeText("$[1:3]")).match(new Pointer(["1"]).tokens),
-        new Path(encodeText("$[1:3]")).match(new Pointer(["2"]).tokens),
-        new Path(encodeText("$[:]")).match(new Pointer(["0"]).tokens),
-        new Path(encodeText("$[:]")).match(new Pointer(["99"]).tokens),
-        new Path(encodeText("$['child']")).match(new Pointer(["child"]).tokens),
-        new Path(encodeText("$.foo.bar")).match(new Pointer(["foo", "bar"]).tokens),
-        new Path(encodeText("$..foo")).match(new Pointer(["foo"]).tokens),
-        new Path(encodeText("$..foo")).match(new Pointer(["a", "foo"]).tokens),
-        new Path(encodeText("$..foo")).match(new Pointer(["a", "b", "foo"]).tokens),
-        new Path(encodeText("$..*")).match(new Pointer(["x"]).tokens),
-        new Path(encodeText("$..*")).match(new Pointer(["x", "y"]).tokens),
-        new Path(encodeText("$.a.b[*]")).match(new Pointer(["a", "b", "0"]).tokens),
-        new Path(encodeText("$.a.b[*]")).match(new Pointer(["a", "b", "5"]).tokens),
-      ];
-
-      for (const expr of cases) {
-        assert(expr);
-      }
-    });
-
-    await test.step("should return false for non-matching paths", () => {
-      const cases = [
-        new Path(encodeText("$")).match(new Pointer(["foo"]).tokens),
-        new Path(encodeText("$.foo")).match(new Pointer(["bar"]).tokens),
-        new Path(encodeText("$.foo")).match(new Pointer([]).tokens),
-        new Path(encodeText("$.foo")).match(new Pointer(["foo", "bar"]).tokens),
-        new Path(encodeText("$.*")).match(new Pointer([]).tokens),
-        new Path(encodeText("$.*")).match(new Pointer(["foo", "bar"]).tokens),
-        new Path(encodeText("$[2]")).match(new Pointer(["1"]).tokens),
-        new Path(encodeText("$[2]")).match(new Pointer(["foo"]).tokens),
-        new Path(encodeText("$[1:3]")).match(new Pointer(["0"]).tokens),
-        new Path(encodeText("$[1:3]")).match(new Pointer(["3"]).tokens),
-        new Path(encodeText("$[:]")).match(new Pointer(["foo"]).tokens),
-        new Path(encodeText("$.foo.bar")).match(new Pointer(["foo"]).tokens),
-        new Path(encodeText("$.foo.bar")).match(new Pointer(["foo", "baz"]).tokens),
-        new Path(encodeText("$..foo")).match(new Pointer(["bar"]).tokens),
-        new Path(encodeText("$..foo")).match(new Pointer(["foo", "bar"]).tokens),
-        new Path(encodeText("$.a.b[*]")).match(new Pointer(["a", "b"]).tokens),
-        new Path(encodeText("$.a.b[*]")).match(new Pointer(["a", "b", "0", "name"]).tokens),
-      ];
-
-      for (const expr of cases) {
-        assertFalse(expr);
       }
     });
   });
