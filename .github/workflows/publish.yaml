@@ -33,10 +33,10 @@ jobs:
           npm install
 
       - name: Build
-        run: npm run build
+        run: npm run build -- --mode lib
 
       - name: Publish to npm
-        run: npm publish --access public
+        run: npm publish --access public --provenance
 
       - name: Publish to JSR
         run: npx jsr publish
