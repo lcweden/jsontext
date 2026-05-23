@@ -5,7 +5,6 @@
     "lib": ["ESNext", "DOM"],
     "paths": { "#src/*": ["./src/*"] },
     "moduleResolution": "bundler",
-    "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true,
     "moduleDetection": "force",
     "skipLibCheck": true,

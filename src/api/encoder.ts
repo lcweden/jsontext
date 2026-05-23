@@ -1,8 +1,8 @@
-import { DEFAULT_ENCODER_OPTIONS } from "#src/common/constants.ts";
-import Encoder from "#src/modules/encoder.ts";
-import type Token from "#src/modules/token.ts";
-import type Value from "#src/modules/value.ts";
-import type { EncoderOptions } from "#src/types/options.ts";
+import { DEFAULT_ENCODER_OPTIONS } from "#src/common/constants";
+import Encoder from "#src/modules/encoder";
+import type Token from "#src/modules/token";
+import type Value from "#src/modules/value";
+import type { EncoderOptions } from "#src/types/options";
 
 type JSONTextEncoderOptions = EncoderOptions;
 
@@ -21,17 +21,6 @@ class JSONTextEncoder {
    */
   constructor(options?: JSONTextEncoderOptions) {
     this.#encoder = new Encoder({ ...DEFAULT_ENCODER_OPTIONS, ...options });
-  }
-
-  /**
-   * Returns the cumulative encoded bytes produced so far.
-   *
-   * The buffer is never cleared between calls; use {@link reset} to start fresh.
-   *
-   * @returns The cumulative encoded bytes produced so far.
-   */
-  bytes(): Uint8Array {
-    return this.#encoder.bytes();
   }
 
   /**
@@ -77,6 +66,15 @@ class JSONTextEncoder {
    */
   stackPointer(where: 0 | 1 | -1 = 1): string {
     return this.#encoder.stackPointer(where).toString();
+  }
+
+  /**
+   * Drains and returns the bytes accumulated in the output buffer since the
+   * last call. The internal buffer is cleared; structural state (nesting,
+   * delimiters) is preserved so subsequent writes continue the same document.
+   */
+  takeBytes(): Uint8Array {
+    return this.#encoder.takeBytes();
   }
 
   /**

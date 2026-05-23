@@ -1,5 +1,5 @@
-import Path from "#src/modules/path.ts";
-import { encodeText } from "#src/utils/text.ts";
+import Path from "#src/modules/path";
+import { encodeText } from "#src/utils/text";
 import { assert, assertThrows } from "#std/assert";
 
 Deno.test("[module] path", async (test) => {

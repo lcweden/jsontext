@@ -1,4 +1,4 @@
-import { ASCII, SEGMENT, SELECTOR } from "#src/common/constants.ts";
+import { ASCII, SEGMENT, SELECTOR } from "#src/common/constants";
 import type {
   ArraySliceSelector,
   IndexSelector,
@@ -6,9 +6,9 @@ import type {
   Segment,
   Selector,
   WildcardSelector,
-} from "#src/types/path.ts";
-import { decodeText } from "#src/utils/text.ts";
-import { consumeNumber, consumeWhitespace } from "#src/utils/wire.ts";
+} from "#src/types/path";
+import { decodeText } from "#src/utils/text";
+import { consumeNumber, consumeWhitespace } from "#src/utils/wire";
 
 /**
  * Supports a subset of JSON Path syntax and provides an NFA-based matcher.

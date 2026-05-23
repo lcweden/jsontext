@@ -1,8 +1,8 @@
-import { SyntacticError } from "#src/common/errors.ts";
-import { JSONTextEncoder } from "#src/index.ts";
-import Token from "#src/modules/token.ts";
-import Value from "#src/modules/value.ts";
-import { decodeText, encodeText } from "#src/utils/text.ts";
+import { SyntacticError } from "#src/common/errors";
+import { JSONTextEncoder } from "#src/index";
+import Token from "#src/modules/token";
+import Value from "#src/modules/value";
+import { decodeText, encodeText } from "#src/utils/text";
 import { assertEquals, assertThrows } from "#std/assert";
 
 Deno.test("[integration] JSONTextEncoder", async (test) => {
@@ -12,7 +12,7 @@ Deno.test("[integration] JSONTextEncoder", async (test) => {
 
       encoder.writeToken(Token.fromText("null"));
 
-      assertEquals(decodeText(encoder.bytes()), "null");
+      assertEquals(decodeText(encoder.takeBytes()), "null");
     });
 
     await test.step("should write a boolean token", () => {
@@ -20,7 +20,7 @@ Deno.test("[integration] JSONTextEncoder", async (test) => {
 
       encoder.writeToken(Token.fromBoolean(true));
 
-      assertEquals(decodeText(encoder.bytes()), "true");
+      assertEquals(decodeText(encoder.takeBytes()), "true");
     });
 
     await test.step("should write a number token", () => {
@@ -28,7 +28,7 @@ Deno.test("[integration] JSONTextEncoder", async (test) => {
 
       encoder.writeToken(Token.fromNumber(42));
 
-      assertEquals(decodeText(encoder.bytes()), "42");
+      assertEquals(decodeText(encoder.takeBytes()), "42");
     });
 
     await test.step("should write a string token", () => {
@@ -36,7 +36,7 @@ Deno.test("[integration] JSONTextEncoder", async (test) => {
 
       encoder.writeToken(Token.fromString("hello"));
 
-      assertEquals(decodeText(encoder.bytes()), '"hello"');
+      assertEquals(decodeText(encoder.takeBytes()), '"hello"');
     });
 
     await test.step("should write array tokens producing compact JSON", () => {
@@ -47,7 +47,7 @@ Deno.test("[integration] JSONTextEncoder", async (test) => {
       encoder.writeToken(Token.fromNumber(2));
       encoder.writeToken(Token.fromText("]"));
 
-      assertEquals(decodeText(encoder.bytes()), "[1,2]");
+      assertEquals(decodeText(encoder.takeBytes()), "[1,2]");
     });
 
     await test.step("should write object tokens with space after colon", () => {
@@ -58,7 +58,7 @@ Deno.test("[integration] JSONTextEncoder", async (test) => {
       encoder.writeToken(Token.fromNumber(1));
       encoder.writeToken(Token.fromText("}"));
 
-      assertEquals(decodeText(encoder.bytes()), '{"a": 1}');
+      assertEquals(decodeText(encoder.takeBytes()), '{"a": 1}');
     });
 
     await test.step("should throw SyntacticError when a number is written as an object key", () => {
@@ -82,7 +82,7 @@ Deno.test("[integration] JSONTextEncoder", async (test) => {
 
       encoder.writeValue(new Value(encodeText("42")));
 
-      assertEquals(decodeText(encoder.bytes()), "42");
+      assertEquals(decodeText(encoder.takeBytes()), "42");
     });
 
     await test.step("should write a nested array as a single call", () => {
@@ -90,7 +90,7 @@ Deno.test("[integration] JSONTextEncoder", async (test) => {
 
       encoder.writeValue(new Value(encodeText("[1,2]")));
 
-      assertEquals(decodeText(encoder.bytes()), "[1,2]");
+      assertEquals(decodeText(encoder.takeBytes()), "[1,2]");
     });
 
     await test.step("should write a nested object as a single call", () => {
@@ -98,15 +98,15 @@ Deno.test("[integration] JSONTextEncoder", async (test) => {
 
       encoder.writeValue(new Value(encodeText('{"a":1}')));
 
-      assertEquals(decodeText(encoder.bytes()), '{"a":1}');
+      assertEquals(decodeText(encoder.takeBytes()), '{"a":1}');
     });
   });
 
-  await test.step("[scenario] bytes", async (test) => {
+  await test.step("[scenario] takeBytes", async (test) => {
     await test.step("should return an empty buffer before any writes", () => {
       const encoder = new JSONTextEncoder();
 
-      assertEquals(encoder.bytes(), new Uint8Array(0));
+      assertEquals(encoder.takeBytes(), new Uint8Array(0));
     });
 
     await test.step("should return the written bytes after writing", () => {
@@ -114,7 +114,7 @@ Deno.test("[integration] JSONTextEncoder", async (test) => {
 
       encoder.writeToken(Token.fromNumber(42));
 
-      assertEquals(encoder.bytes(), encodeText("42"));
+      assertEquals(encoder.takeBytes(), encodeText("42"));
     });
   });
 
@@ -162,7 +162,7 @@ Deno.test("[integration] JSONTextEncoder", async (test) => {
       encoder.writeToken(Token.fromNumber(1));
       encoder.writeToken(Token.fromText("]"));
 
-      assertEquals(decodeText(encoder.bytes()), "[\n\t1\n]");
+      assertEquals(decodeText(encoder.takeBytes()), "[\n\t1\n]");
     });
 
     await test.step("should produce compact output when multiline is false", () => {
@@ -172,7 +172,7 @@ Deno.test("[integration] JSONTextEncoder", async (test) => {
       encoder.writeToken(Token.fromNumber(1));
       encoder.writeToken(Token.fromText("]"));
 
-      assertEquals(decodeText(encoder.bytes()), "[1]");
+      assertEquals(decodeText(encoder.takeBytes()), "[1]");
     });
 
     await test.step("should not add space after colon when spaceAfterColon is false", () => {
@@ -183,7 +183,7 @@ Deno.test("[integration] JSONTextEncoder", async (test) => {
       encoder.writeToken(Token.fromNumber(1));
       encoder.writeToken(Token.fromText("}"));
 
-      assertEquals(decodeText(encoder.bytes()), '{"a":1}');
+      assertEquals(decodeText(encoder.takeBytes()), '{"a":1}');
     });
 
     await test.step("should canonicalize raw numbers when option is enabled", () => {
@@ -191,7 +191,7 @@ Deno.test("[integration] JSONTextEncoder", async (test) => {
 
       encoder.writeToken(Token.fromText("1.0e1"));
 
-      assertEquals(decodeText(encoder.bytes()), "10");
+      assertEquals(decodeText(encoder.takeBytes()), "10");
     });
 
     await test.step("should escape HTML characters when escapeForHTML is enabled", () => {
@@ -199,7 +199,7 @@ Deno.test("[integration] JSONTextEncoder", async (test) => {
 
       encoder.writeToken(Token.fromString("<b>&</b>"));
 
-      assertEquals(decodeText(encoder.bytes()), '"\\u003cb\\u003e\\u0026\\u003c/b\\u003e"');
+      assertEquals(decodeText(encoder.takeBytes()), '"\\u003cb\\u003e\\u0026\\u003c/b\\u003e"');
     });
 
     await test.step("should escape JS line terminators when escapeForJS is enabled", () => {
@@ -207,7 +207,7 @@ Deno.test("[integration] JSONTextEncoder", async (test) => {
 
       encoder.writeToken(Token.fromString("\u2028\u2029"));
 
-      assertEquals(decodeText(encoder.bytes()), '"\\u2028\\u2029"');
+      assertEquals(decodeText(encoder.takeBytes()), '"\\u2028\\u2029"');
     });
   });
 });

@@ -1,7 +1,7 @@
-import { KIND } from "#src/common/constants.ts";
-import { SyntacticError } from "#src/common/errors.ts";
-import { JSONTextDecoder } from "#src/index.ts";
-import { encodeText } from "#src/utils/text.ts";
+import { KIND } from "#src/common/constants";
+import { SyntacticError } from "#src/common/errors";
+import { JSONTextDecoder } from "#src/index";
+import { encodeText } from "#src/utils/text";
 import { assertEquals, assertThrows } from "#std/assert";
 
 Deno.test("[integration] JSONTextDecoder", async (test) => {

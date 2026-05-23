@@ -1,8 +1,8 @@
-import Automaton from "#src/modules/automaton.ts";
-import Pointer from "#src/modules/pointer.ts";
-import { ObjectNamespaceStack, ObjectNameStack } from "#src/modules/stack.ts";
-import type { Kind } from "#src/types/kind.ts";
-import type { BaseOptions } from "#src/types/options.ts";
+import Automaton from "#src/modules/automaton";
+import Pointer from "#src/modules/pointer";
+import { ObjectNamespaceStack, ObjectNameStack } from "#src/modules/stack";
+import type { Kind } from "#src/types/kind";
+import type { BaseOptions } from "#src/types/options";
 
 class State {
   #automaton: Automaton;

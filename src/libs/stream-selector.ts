@@ -1,10 +1,10 @@
-import { DEFAULT_DECODER_OPTIONS, KIND, MAX_NESTING_DEPTH } from "#src/common/constants.ts";
-import Decoder from "#src/modules/decoder.ts";
-import type { Matcher } from "#src/modules/path.ts";
-import Path from "#src/modules/path.ts";
-import type Value from "#src/modules/value.ts";
-import type { DecoderOptions } from "#src/types/options.ts";
-import { encodeText } from "#src/utils/text.ts";
+import { DEFAULT_DECODER_OPTIONS, KIND, MAX_NESTING_DEPTH } from "#src/common/constants";
+import Decoder from "#src/modules/decoder";
+import type { Matcher } from "#src/modules/path";
+import Path from "#src/modules/path";
+import type Value from "#src/modules/value";
+import type { DecoderOptions } from "#src/types/options";
+import { encodeText } from "#src/utils/text";
 
 type JSONTextSelectorStreamOptions = DecoderOptions & {
   writableStrategy?: QueuingStrategy<Uint8Array>;

@@ -1,4 +1,4 @@
-import { encodeText as e } from "#src/utils/text.ts";
+import { encodeText as e } from "#src/utils/text";
 import {
   compareUTF16,
   consumeFalse,
@@ -9,7 +9,7 @@ import {
   consumeString,
   consumeTrue,
   consumeWhitespace,
-} from "#src/utils/wire.ts";
+} from "#src/utils/wire";
 import { assertEquals } from "#std/assert";
 
 Deno.test("[utils] wire", async (test) => {

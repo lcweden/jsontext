@@ -1,6 +1,6 @@
-import { KIND } from "#src/common/constants.ts";
-import Token from "#src/modules/token.ts";
-import { encodeText as e } from "#src/utils/text.ts";
+import { KIND } from "#src/common/constants";
+import Token from "#src/modules/token";
+import { encodeText as e } from "#src/utils/text";
 import { assertEquals, assertThrows } from "#std/assert";
 
 Deno.test("[module] token", async (test) => {
