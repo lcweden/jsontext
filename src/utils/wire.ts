@@ -1,5 +1,5 @@
-import { ASCII } from "#src/common/constants.ts";
-import { decodeText } from "#src/utils/text.ts";
+import { ASCII } from "#src/common/constants";
+import { decodeText } from "#src/utils/text";
 
 /**
  * Compares two strings by UTF-16 code unit order, as required by RFC 8785 §3.2.3.

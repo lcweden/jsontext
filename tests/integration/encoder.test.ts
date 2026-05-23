@@ -1,8 +1,8 @@
-import { SyntacticError } from "#src/common/errors.ts";
-import { JSONTextEncoder } from "#src/index.ts";
-import Token from "#src/modules/token.ts";
-import Value from "#src/modules/value.ts";
-import { decodeText, encodeText } from "#src/utils/text.ts";
+import { SyntacticError } from "#src/common/errors";
+import { JSONTextEncoder } from "#src/index";
+import Token from "#src/modules/token";
+import Value from "#src/modules/value";
+import { decodeText, encodeText } from "#src/utils/text";
 import { assertEquals, assertThrows } from "#std/assert";
 
 Deno.test("[integration] JSONTextEncoder", async (test) => {

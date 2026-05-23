@@ -1,7 +1,7 @@
-import { DEFAULT_DECODER_OPTIONS } from "#src/common/constants.ts";
-import Decoder from "#src/modules/decoder.ts";
-import type Value from "#src/modules/value.ts";
-import type { DecoderOptions } from "#src/types/options.ts";
+import { DEFAULT_DECODER_OPTIONS } from "#src/common/constants";
+import Decoder from "#src/modules/decoder";
+import type Value from "#src/modules/value";
+import type { DecoderOptions } from "#src/types/options";
 
 type JSONTextLineStreamOptions = DecoderOptions & {
   writableStrategy?: QueuingStrategy<Uint8Array>;

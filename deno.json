@@ -15,8 +15,15 @@
   },
   "exports": { ".": "./src/index.ts" },
   "fmt": { "lineWidth": 100 },
-  "lint": { "rules": { "tags": ["recommended"], "include": ["no-slow-types"] } },
-  "exclude": ["node_modules/", "public/", "dist/", "vite.config.ts"],
+  "lint": {
+    "rules": {
+      "tags": ["recommended"],
+      "include": ["no-slow-types"],
+      "exclude": ["no-sloppy-imports"]
+    }
+  },
+  "unstable": ["sloppy-imports"],
+  "exclude": ["node_modules/", "public/", "dist/"],
   "publish": {
     "include": ["src/", "README.md", "LICENSE", "deno.json"],
     "exclude": ["tests/", ".github/", ".vscode/", "dist/", "public/"]

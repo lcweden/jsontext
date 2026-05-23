@@ -1,5 +1,5 @@
-import { KIND } from "#src/common/constants.ts";
-import type { Kind } from "#src/types/kind.ts";
+import { KIND } from "#src/common/constants";
+import type { Kind } from "#src/types/kind";
 
 class Entry {
   #type: "object" | "array";

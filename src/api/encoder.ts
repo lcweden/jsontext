@@ -1,8 +1,8 @@
-import { DEFAULT_ENCODER_OPTIONS } from "#src/common/constants.ts";
-import Encoder from "#src/modules/encoder.ts";
-import type Token from "#src/modules/token.ts";
-import type Value from "#src/modules/value.ts";
-import type { EncoderOptions } from "#src/types/options.ts";
+import { DEFAULT_ENCODER_OPTIONS } from "#src/common/constants";
+import Encoder from "#src/modules/encoder";
+import type Token from "#src/modules/token";
+import type Value from "#src/modules/value";
+import type { EncoderOptions } from "#src/types/options";
 
 type JSONTextEncoderOptions = EncoderOptions;
 

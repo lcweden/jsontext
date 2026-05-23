@@ -1,10 +1,10 @@
-import { ASCII, DEFAULT_DECODER_OPTIONS, KIND } from "#src/common/constants.ts";
-import Decoder from "#src/modules/decoder.ts";
-import type Token from "#src/modules/token.ts";
-import type { Kind } from "#src/types/kind.ts";
-import { normalize } from "#src/utils/kind.ts";
-import { decodeText, encodeText } from "#src/utils/text.ts";
-import { compareUTF16, consumeWhitespace } from "#src/utils/wire.ts";
+import { ASCII, DEFAULT_DECODER_OPTIONS, KIND } from "#src/common/constants";
+import Decoder from "#src/modules/decoder";
+import type Token from "#src/modules/token";
+import type { Kind } from "#src/types/kind";
+import { normalize } from "#src/utils/kind";
+import { decodeText, encodeText } from "#src/utils/text";
+import { compareUTF16, consumeWhitespace } from "#src/utils/wire";
 
 /**
  * Represents a complete JSON value.

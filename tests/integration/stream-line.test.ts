@@ -1,5 +1,5 @@
-import { JSONTextLineStream } from "#src/index.ts";
-import { encodeText } from "#src/utils/text.ts";
+import { JSONTextLineStream } from "#src/index";
+import { encodeText } from "#src/utils/text";
 import { assertEquals } from "#std/assert";
 
 Deno.test("[integration] JSONTextLineStream", async (test) => {

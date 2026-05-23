@@ -1,5 +1,5 @@
-import { ASCII, KIND } from "#src/common/constants.ts";
-import type { Kind } from "#src/types/kind.ts";
+import { ASCII, KIND } from "#src/common/constants";
+import type { Kind } from "#src/types/kind";
 
 const NORM_KIND: Record<number, Kind> = {
   [ASCII.LOWER_CASE_N]: KIND.NULL,
