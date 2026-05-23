@@ -24,17 +24,6 @@ class JSONTextEncoder {
   }
 
   /**
-   * Returns the cumulative encoded bytes produced so far.
-   *
-   * The buffer is never cleared between calls; use {@link reset} to start fresh.
-   *
-   * @returns The cumulative encoded bytes produced so far.
-   */
-  bytes(): Uint8Array {
-    return this.#encoder.bytes();
-  }
-
-  /**
    * The current nesting depth — `0` at top level, incremented inside each
    * object or array.
    *
@@ -77,6 +66,15 @@ class JSONTextEncoder {
    */
   stackPointer(where: 0 | 1 | -1 = 1): string {
     return this.#encoder.stackPointer(where).toString();
+  }
+
+  /**
+   * Drains and returns the bytes accumulated in the output buffer since the
+   * last call. The internal buffer is cleared; structural state (nesting,
+   * delimiters) is preserved so subsequent writes continue the same document.
+   */
+  takeBytes(): Uint8Array {
+    return this.#encoder.takeBytes();
   }
 
   /**
