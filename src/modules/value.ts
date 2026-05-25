@@ -9,27 +9,28 @@ import { compareUTF16, consumeWhitespace } from "#src/utils/wire";
 /**
  * Represents a complete JSON value.
  *
- * A value may be a scalar (`null`, `true`, `false`, a number, or a string)
+ * A value is either a scalar (`null`, `true`, `false`, a number, or a string)
  * or a composite structure (an object or array, including all nested content).
- * It holds the raw UTF-8 bytes and provides methods for converting,
- * validating, canonicalizing, and iterating over the value.
+ * Unlike {@link Token}, leading whitespace is accepted and preserved in
+ * {@link bytes}.
  *
- * Unlike {@link Token}, a `Value` may be preceded by whitespace.
+ * @public
  */
 class Value {
   #bytes: Uint8Array;
   #kind: Kind;
+  #pointer?: string;
 
   /**
    * Creates a `Value` from raw UTF-8 bytes.
-   *
    * Leading whitespace is accepted and preserved in {@link bytes}.
    *
    * @param bytes - Raw UTF-8 bytes of a complete JSON value.
+   * @param pointer - Optional JSON Pointer (RFC 6901) indicating where this valuewas located in the source document. Typically set by {@link JSONTextSelectorStream}.
    * @throws {RangeError} If `bytes` is empty.
    * @throws {SyntaxError} If no valid JSON token is found after skipping leading whitespace.
    */
-  constructor(bytes: Uint8Array) {
+  constructor(bytes: Uint8Array, pointer: string | undefined = undefined) {
     if (!bytes.length) {
       throw new RangeError("Value must have at least one byte");
     }
@@ -48,6 +49,12 @@ class Value {
 
     this.#bytes = bytes;
     this.#kind = kind;
+    this.#pointer = pointer;
+  }
+
+  /** The raw UTF-8 bytes of this value, including any leading whitespace. */
+  get bytes(): Uint8Array {
+    return this.#bytes;
   }
 
   /** The {@link Kind} of the top-level token of this value. */
@@ -55,9 +62,9 @@ class Value {
     return this.#kind;
   }
 
-  /** The raw UTF-8 bytes of this value, including any leading whitespace. */
-  get bytes(): Uint8Array {
-    return this.#bytes;
+  /** The JSON Pointer (RFC 6901) describing where this value was located in the source document, or `undefined` if the value was not produced by a stream API. */
+  get pointer(): string | undefined {
+    return this.#pointer;
   }
 
   /**
@@ -66,8 +73,10 @@ class Value {
    * @param input - Any JSON-serialisable value.
    * @returns A new `Value` whose bytes are the JSON representation of `input`.
    * @example
+   * ```javascript
    * const value = Value.from({ a: 1, b: [true, null] });
    * console.log(value.text()); // '{"a":1,"b":[true,null]}'
+   * ```
    */
   static from(input: unknown): Value {
     const json = JSON.stringify(input);
@@ -83,6 +92,12 @@ class Value {
    * and normalizes numbers. The result is deterministic and idempotent.
    *
    * @returns A new `Value` in canonical form.
+   * @throws {SyntacticError} If the bytes do not represent valid JSON.
+   * @example
+   * ```javascript
+   * Value.from({ b: 2, a: 1 }).canonicalize().text() // '{"a":1,"b":2}'
+   * Value.from([3, 1, 2]).canonicalize().text()       // '[3,1,2]' (arrays are not sorted)
+   * ```
    */
   canonicalize(): Value {
     const decoder = new Decoder(this.#bytes, { allowDuplicateNames: true });
@@ -130,6 +145,7 @@ class Value {
    * Deserializes this value to a JavaScript value via `JSON.parse`.
    *
    * @returns The parsed JavaScript value.
+   * @throws {SyntaxError} If the bytes do not represent valid JSON.
    */
   json(): unknown {
     return JSON.parse(this.text());
@@ -139,7 +155,7 @@ class Value {
    * Returns the UTF-8 string representation of this value.
    *
    * @returns The JSON text of this value.
-   * @throws If the bytes contain invalid UTF-8 sequences.
+   * @throws {TypeError} If the bytes contain invalid UTF-8 sequences.
    */
   text(): string {
     return decodeText(this.bytes, true);
@@ -153,6 +169,7 @@ class Value {
    * tokens including structural delimiters, keys, and nested values.
    *
    * @yields {Token} Tokens in document order.
+   * @throws {SyntacticError} If the bytes do not represent valid JSON.
    */
   *tokens(): Generator<Token> {
     const decoder = new Decoder(this.bytes, DEFAULT_DECODER_OPTIONS);
@@ -168,6 +185,14 @@ class Value {
     }
   }
 
+  /**
+   * Recursively processes a single JSON value from the decoder, normalizing
+   * numbers and dispatching composite values to `#processObject` or
+   * `#processArray`.
+   *
+   * @param decoder The decoder positioned at the start of the value.
+   * @returns The canonicalized UTF-8 bytes of the value.
+   */
   #processValue(decoder: Decoder): Uint8Array {
     const kind = decoder.peekKind();
 
@@ -193,6 +218,13 @@ class Value {
     return token.bytes;
   }
 
+  /**
+   * Consumes a JSON object from the decoder, sorts its members by key in
+   * UTF-16 code unit order, and re-serializes them to canonical UTF-8 bytes.
+   *
+   * @param decoder The decoder positioned at the opening `{`.
+   * @returns The canonicalized UTF-8 bytes of the object.
+   */
   #processObject(decoder: Decoder): Uint8Array {
     decoder.readToken();
 
@@ -246,6 +278,13 @@ class Value {
     return result;
   }
 
+  /**
+   * Consumes a JSON array from the decoder and re-serializes its elements
+   * in their original order to UTF-8 bytes.
+   *
+   * @param decoder The decoder positioned at the opening `[`.
+   * @returns The UTF-8 bytes of the re-serialized array.
+   */
   #processArray(decoder: Decoder): Uint8Array {
     decoder.readToken();
 

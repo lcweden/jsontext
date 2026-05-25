@@ -16,51 +16,49 @@ type JSONTextLineStreamOptions = DecoderOptions & {
  * This makes `JSONTextLineStream` well-suited for processing newline-delimited
  * JSON (JSONL / JSON Lines) as well as any concatenated-JSON stream.
  *
+ * @public
  * @example
+ * ```javascript
  * const response = await fetch(url);
  * const values = response.body
  *   .pipeThrough(new JSONTextLineStream());
+ * ```
  */
 class JSONTextLineStream extends TransformStream<Uint8Array, Value> {
+  #decoder: Decoder;
+
   /**
    * @param options - Decoder and queuing strategy options.
    */
-  constructor(options?: JSONTextLineStreamOptions) {
-    const { writableStrategy, readableStrategy, ...rest } = options ?? {};
-    const decoder = new Decoder(new Uint8Array(), { ...DEFAULT_DECODER_OPTIONS, ...rest });
+  constructor(options: JSONTextLineStreamOptions = {}) {
+    const { writableStrategy, readableStrategy, ...rest } = options;
+    const decoderOptions = { ...DEFAULT_DECODER_OPTIONS, ...rest };
 
     super(
       {
-        transform(chunk, controller) {
-          try {
-            decoder.push(chunk);
-
-            let value;
-
-            while ((value = decoder.readValue()) !== undefined) {
-              controller.enqueue(value);
-            }
-          } catch (error) {
-            controller.error(error);
-          }
+        transform: (chunk, controller) => {
+          this.#decoder.push(chunk);
+          this.#drain(controller);
         },
-        flush(controller) {
-          try {
-            decoder.end();
-
-            let value;
-
-            while ((value = decoder.readValue()) !== undefined) {
-              controller.enqueue(value);
-            }
-          } catch (error) {
-            controller.error(error);
-          }
+        flush: (controller) => {
+          this.#decoder.end();
+          this.#drain(controller);
         },
       },
       writableStrategy,
       readableStrategy,
     );
+
+    this.#decoder = new Decoder(new Uint8Array(), decoderOptions);
+  }
+
+  /**
+   * Drains all available values from the decoder into the readable side.
+   */
+  #drain(controller: TransformStreamDefaultController<Value>): void {
+    for (let value; (value = this.#decoder.readValue()) !== undefined;) {
+      controller.enqueue(value);
+    }
   }
 }
 

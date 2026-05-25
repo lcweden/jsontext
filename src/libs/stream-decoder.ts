@@ -15,54 +15,50 @@ type JSONTextDecoderStreamOptions = DecoderOptions & {
  * Writable side accepts raw JSON bytes (possibly split across multiple chunks).
  * Readable side emits one {@link Token} per JSON token in document order.
  *
+ * @public
  * @example
+ * ```javascript
  * const response = await fetch(url);
  * const tokens = response.body
  *   .pipeThrough(new JSONTextDecoderStream());
+ * ```
  */
 class JSONTextDecoderStream extends TransformStream<Uint8Array, Token> {
+  #decoder: Decoder;
+
   /**
    * @param options - Decoder and queuing strategy options.
    */
   constructor(options: JSONTextDecoderStreamOptions = {}) {
     const { writableStrategy, readableStrategy, ...rest } = options;
     const decoderOptions = { ...DEFAULT_DECODER_OPTIONS, ...rest };
-    const decoder = new Decoder(new Uint8Array(), decoderOptions);
 
     super(
       {
-        transform(chunk, controller) {
-          try {
-            decoder.push(chunk);
-
-            let token;
-
-            while ((token = decoder.readToken()) !== undefined) {
-              controller.enqueue(token);
-            }
-          } catch (error) {
-            controller.error(error);
-          }
+        transform: (chunk, controller) => {
+          this.#decoder.push(chunk);
+          this.#drain(controller);
         },
-        flush(controller) {
-          try {
-            decoder.end();
-
-            let token;
-
-            while ((token = decoder.readToken()) !== undefined) {
-              controller.enqueue(token);
-            }
-
-            decoder.checkEOF();
-          } catch (error) {
-            controller.error(error);
-          }
+        flush: (controller) => {
+          this.#decoder.end();
+          this.#drain(controller);
+          this.#decoder.checkEOF();
         },
       },
       writableStrategy,
       readableStrategy,
     );
+
+    this.#decoder = new Decoder(new Uint8Array(), decoderOptions);
+  }
+
+  /**
+   * Drains all available tokens from the decoder into the readable side.
+   */
+  #drain(controller: TransformStreamDefaultController<Token>): void {
+    for (let token; (token = this.#decoder.readToken()) !== undefined;) {
+      controller.enqueue(token);
+    }
   }
 }
 

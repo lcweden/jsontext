@@ -22,10 +22,12 @@ import { consumeNumber, consumeWhitespace } from "#src/utils/wire";
  * - **Index Selector (positive)**: `[1]`
  * - **Array Slice Selector (positive)**: `[0:5]` or `[::2]`
  *
- * @see https://www.rfc-editor.org/rfc/rfc9535
  * @internal
+ * @see https://www.rfc-editor.org/rfc/rfc9535
  * @example
+ * ```javascript
  * const path = new Path(new TextEncoder().encode("$.store.book[0].title"));
+ * ```
  */
 class Path {
   #bytes: Uint8Array;
@@ -43,9 +45,9 @@ class Path {
   }
 
   /**
-   * Creates a `Matcher` instance based on this path.
+   * Creates a `Matcher` for incrementally matching a JSON traversal against this path.
    *
-   * @returns A `Matcher` instance that can be used to test JSON values against this path.
+   * @returns A new `Matcher` instance initialised to the start of this path.
    */
   createMatcher(): Matcher {
     return new Matcher(this.#segments);

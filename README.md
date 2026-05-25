@@ -32,9 +32,6 @@ Install via [npm](https://www.npmjs.com/package/jsontext):
 npm install jsontext
 ```
 
-> [!NOTE]
-> It may require Node.js 18 or later.
-
 ### Deno
 
 Install via [JSR](https://jsr.io/@lcweden/jsontext):
@@ -92,8 +89,8 @@ for await (const value of titles) {
 
 Represents JSON at two granularities:
 
-- **Tokens**: The smallest lexical unit (a scalar like `"Alice"`, `true`, `123`, or a delimiter like
-  `{`, `}`, `[`, `]`).
+- **Tokens**: The smallest lexical unit (a scalar like `"Alice"`, `true`, `123`, or a structural
+  symbol like `{`, `}`, `[`, `]`).
 
 - **Values**: A complete unit — a scalar, or an entire `object` or `array` including everything
   nested inside.
@@ -172,7 +169,7 @@ decoder.checkEOF();
 fetch more bytes, not an error. `end()` tells the decoder no more input is coming; `checkEOF()` then
 asserts that what arrived was a complete, well-formed document.
 
-### Composing with streams
+### Composing
 
 The core `JSONTextDecoder` and `JSONTextEncoder` are manual state machines. For common use cases,
 use `TransformStream` wrappers that natively compose with fetch, files, and Web Streams.
@@ -181,7 +178,7 @@ use `TransformStream` wrappers that natively compose with fetch, files, and Web 
 import { JSONTextLineStream, JSONTextSelectorStream } from "jsontext";
 
 // Filter a JSON Lines feed: keep only active users, write them back out as JSONL.
-// JSONTextLineStream emits one Value per line, preserving the original bytes.
+// JSONTextLineStream emits one Value per top-level JSON value — ideal for JSONL and concatenated-JSON.
 const encoder = new TextEncoder();
 
 await response.body
@@ -222,59 +219,45 @@ try {
 }
 ```
 
-## Example Pipelines
+## Examples
+
+Below are some simple examples demonstrating how to use `jsontext` for common JSON processing tasks.
+For more examples, see the [documentation](/docs/).
 
 ### Replace `null` with an empty string
 
-Swap every `null` token for an empty string as the JSON flows through — no parsing the whole
-document, no intermediate object.
+In this example, we read a JSON stream from an API endpoint, replace all `null` values with empty
+strings, and write the modified JSON back out as a stream without ever materializing the whole
+document in memory.
 
 ```javascript
 import { JSONTextDecoderStream, JSONTextEncoderStream, KIND, Token } from "jsontext";
 
-stream
-  .pipeThrough(new JSONTextDecoderStream()) // decode bytes into tokens
-  .pipeThrough(
-    new TransformStream({
-      transform(token, controller) {
-        if (token.kind === KIND.NULL) { // Detect a `null` token
-          controller.enqueue(Token.fromString("")); // Emit an empty string token instead
-        } else {
-          controller.enqueue(token);
-        }
-      },
-    }),
-  )
-  .pipeThrough(new JSONTextEncoderStream()); // encode tokens back into bytes
+const response = await fetch("your.api/endpoint");
+
+if (!response.ok || !response.body) {
+  throw new Error("Failed to fetch data");
+}
+
+const decoder = new JSONTextDecoderStream();
+const encoder = new JSONTextEncoderStream();
+const replacer = new TransformStream({
+  transform(token, controller) {
+    if (token.kind === KIND.NULL) { // Detect a `null` token
+      controller.enqueue(Token.fromString("")); // Emit an empty string token instead
+    } else {
+      controller.enqueue(token);
+    }
+  },
+});
+
+const stream = response.body.pipeThrough(decoder).pipeThrough(replacer).pipeThrough(encoder);
+const blob = await new Response(stream).blob();
 ```
 
-### Extract and Restructure Data
-
-Extract specific nested elements using JSONPath, and wrap them into a brand new JSON array structure
-directly in the stream pipeline.
-
-```javascript
-import { JSONTextEncoderStream, JSONTextSelectorStream, Token } from "jsontext";
-
-stream
-  .pipeThrough(new JSONTextSelectorStream("$.todos[*].todo")) // extract all `todo` values from the `todos` array
-  .pipeThrough(
-    new TransformStream({
-      start(controller) {
-        controller.enqueue(Token.ARRAY_BEGIN); // emit a `[` to start the output array
-      },
-      transform(value, controller) {
-        for (const token of value.tokens()) {
-          controller.enqueue(token);
-        }
-      },
-      flush(controller) {
-        controller.enqueue(Token.ARRAY_END); // emit a `]` to end the output array
-      },
-    }),
-  )
-  .pipeThrough(new JSONTextEncoderStream()); // encode back to bytes for output
-```
+> [!TIP]
+> `JSONTextDecoderStream` supports Token-level processing only. If you need to replace values that
+> may be nested inside objects or arrays, you will need to use `JSONTextDecoder` directly.
 
 ## License
 

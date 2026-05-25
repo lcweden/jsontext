@@ -9,12 +9,24 @@ import type { Kind } from "#src/types/kind";
 import type { EncoderOptions } from "#src/types/options";
 import { decodeText, encodeText } from "#src/utils/text";
 
+/**
+ * Low-level JSON encoder that serializes tokens and values onto an internal
+ * {@link Tape}, enforcing RFC 8259 structural rules and applying optional
+ * formatting (indentation, HTML escaping, etc.).
+ *
+ * @internal
+ */
 class Encoder {
   #tape: Tape;
   #state: State;
   #options: EncoderOptions;
   #cache: Record<string, Uint8Array | null>;
 
+  /**
+   * Creates a new Encoder with the given options.
+   *
+   * @param options Encoder configuration options.
+   */
   constructor(options: EncoderOptions) {
     this.#tape = new Tape();
     this.#state = new State(options);
@@ -28,31 +40,74 @@ class Encoder {
     };
   }
 
+  /**
+   * Returns a view of the bytes written so far without advancing the output offset.
+   *
+   * @returns A subarray of the internal tape buffer.
+   */
   bytes(): Uint8Array {
     return this.#tape.bytes();
   }
 
+  /**
+   * Returns the current structural nesting depth.
+   *
+   * @returns The current nesting depth — `1` at the top level, incremented by each open object or array.
+   */
   depth(): number {
     return this.#state.depth();
   }
 
+  /**
+   * Returns the absolute output byte offset, accumulating across all
+   * {@link takeBytes} calls since the last {@link reset}.
+   *
+   * @returns The absolute output byte offset.
+   */
   outputOffset(): number {
     return this.#tape.outputOffset();
   }
 
+  /**
+   * Clears the tape and reinitializes the structural state.
+   */
   reset(): void {
     this.#tape.reset();
     this.#state = new State(this.#options);
   }
 
+  /**
+   * Generates a JSON Pointer representing a location relative to the current
+   * encoding position.
+   *
+   * @param where `-1` for the previously processed value, `0` for the current scope, `1` for the next value.
+   * @returns A {@link Pointer} representing the absolute path.
+   */
   stackPointer(where: 0 | 1 | -1): Pointer {
     return this.#state.stackPointer(where);
   }
 
+  /**
+   * Extracts the written bytes as a slice and advances the base output offset,
+   * preparing the tape for the next chunk (streaming use).
+   *
+   * @returns A copy of the bytes written since the last `takeBytes` call.
+   */
   takeBytes(): Uint8Array {
     return this.#tape.takeBytes();
   }
 
+  /**
+   * Serializes a single token onto the tape.
+   *
+   * Automatically inserts structural delimiters (`:` or `,`) and any
+   * configured whitespace or indentation before the token. On error, the
+   * tape is rolled back to its pre-call length.
+   *
+   * @param token The {@link Token} to write.
+   * @throws {SyntacticError} If the token is structurally invalid at the
+   *   current position.
+   */
   writeToken(token: Token): void {
     const length = this.#tape.length;
     const delimiter = this.#state.needDelimiter(token.kind);
@@ -144,6 +199,16 @@ class Encoder {
     }
   }
 
+  /**
+   * Serializes a complete pre-parsed value onto the tape.
+   *
+   * Automatically inserts structural delimiters and any configured whitespace
+   * before the value. On error, the tape is rolled back to its pre-call length.
+   *
+   * @param value The {@link Value} to write.
+   * @throws {SyntacticError} If the value is structurally invalid at the
+   *   current position.
+   */
   writeValue(value: Value): void {
     const length = this.#tape.length;
     const delimiter = this.#state.needDelimiter(value.kind);
