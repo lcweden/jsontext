@@ -2,23 +2,39 @@ import { MAX_NESTING_DEPTH } from "#src/common/constants";
 import Entry from "#src/modules/entry";
 import type { Kind } from "#src/types/kind";
 
+/**
+ * A state machine that enforces JSON syntax rules and tracks the structural nesting depth.
+ * It ensures that the sequence of incoming tokens adheres strictly to `RFC 8259`.
+ *
+ * @internal
+ */
 class Automaton {
   #last: Entry;
   #stack: Entry[];
 
+  /**
+   * Creates a new Automaton instance.
+   */
   constructor() {
     this.#last = new Entry("array");
     this.#stack = [];
   }
 
+  /** The current entry at the deepest active parsing context. */
   get last(): Entry {
     return this.#last;
   }
 
+  /** The stack of parent entries representing the nesting history. */
   get stack(): Entry[] {
     return this.#stack;
   }
 
+  /**
+   * Asserts and appends a generic literal value to the current context.
+   *
+   * @throws {SyntaxError} If the current entry requires an object name.
+   */
   appendLiteral(): void {
     if (this.#last.needObjectName()) {
       throw new SyntaxError("object name must be a string");
@@ -27,18 +43,40 @@ class Automaton {
     this.#last.increment();
   }
 
+  /**
+   * Appends a string value to the current context.
+   *
+   * Unlike {@link appendLiteral}, strings are valid in both object-name and
+   * value positions, so no structural guard is applied.
+   */
   appendString(): void {
     this.#last.increment();
   }
 
+  /**
+   * Asserts and appends a number value to the current context.
+   *
+   * @throws {SyntaxError} If the current entry requires an object name.
+   */
   appendNumber(): void {
     this.appendLiteral();
   }
 
+  /**
+   * Returns the current nesting depth of the structural state.
+   *
+   * @returns The current nesting depth — `1` at the top level, incremented by each open object or array.
+   */
   depth(): number {
     return this.#stack.length + 1;
   }
 
+  /**
+   * Retrieves the structural entry at the specified depth index.
+   *
+   * @param index The index of the entry to retrieve.
+   * @returns The entry at the specified index.
+   */
   getEntry(index: number): Entry {
     if (index === this.#stack.length) {
       return this.#last;
@@ -47,6 +85,12 @@ class Automaton {
     return this.#stack[index];
   }
 
+  /**
+   * Pushes a new object structure `{` onto the state machine stack.
+   *
+   * @throws {SyntaxError} If the parent context requires an object name.
+   * @throws {RangeError} If the maximum nesting depth is exceeded.
+   */
   pushObject(): void {
     if (this.#last.needObjectName()) {
       throw new SyntaxError("object name must be a string");
@@ -62,6 +106,11 @@ class Automaton {
     this.#last = new Entry("object");
   }
 
+  /**
+   * Resolves and pops the current object structure `}` from the stack.
+   *
+   * @throws {SyntaxError} If the current context is not an object, or if it is prematurely closed while expecting a value.
+   */
   popObject(): void {
     if (!this.#last.isObject()) {
       throw new SyntaxError("mismatching } for object");
@@ -78,12 +127,18 @@ class Automaton {
     }
   }
 
+  /**
+   * Pushes a new array structure `[` onto the state machine stack.
+   *
+   * @throws {SyntaxError} If the parent context requires an object name.
+   * @throws {RangeError} If the maximum nesting depth is exceeded.
+   */
   pushArray(): void {
     if (this.#last.needObjectName()) {
-      throw new SyntaxError("object member name must be a string");
+      throw new SyntaxError("object name must be a string");
     }
 
-    if (this.#stack.length === MAX_NESTING_DEPTH) {
+    if (this.#stack.length >= MAX_NESTING_DEPTH) {
       throw new RangeError("exceeded max depth");
     }
 
@@ -93,6 +148,11 @@ class Automaton {
     this.#last = new Entry("array");
   }
 
+  /**
+   * Resolves and pops the current array structure `]` from the stack.
+   *
+   * @throws {SyntaxError} If the current context is not an array, or if it's the implicit top-level array being closed.
+   */
   popArray(): void {
     if (!this.#last.isArray() || this.#stack.length === 0) {
       throw new SyntaxError("mismatching structural token for object or array");
@@ -105,6 +165,12 @@ class Automaton {
     }
   }
 
+  /**
+   * Determines whether an implicit delimiter is required before the next token.
+   *
+   * @param kind The kind of the next incoming token.
+   * @returns `":"` if a colon is needed, `","` if a comma is needed, or `null` if no delimiter is expected.
+   */
   needDelimiter(kind: Kind): ":" | "," | null {
     if (this.#last.needImplicitColon()) {
       return ":";

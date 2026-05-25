@@ -20,17 +20,37 @@ import {
   consumeWhitespace,
 } from "#src/utils/wire";
 
+/**
+ * Low-level streaming JSON decoder that reads UTF-8 encoded bytes,
+ * navigates through them via a {@link Cursor}, and enforces RFC 8259
+ * structural rules through a {@link State} machine.
+ *
+ * @internal
+ */
 class Decoder {
   #cursor: Cursor;
   #state: State;
   #options: DecoderOptions;
 
+  /**
+   * Creates a new Decoder with an initial byte buffer and options.
+   *
+   * @param bytes Initial UTF-8 bytes to decode.
+   * @param options Decoder configuration options.
+   */
   constructor(bytes: Uint8Array, options: DecoderOptions) {
     this.#cursor = new Cursor(bytes);
     this.#state = new State(options);
     this.#options = options;
   }
 
+  /**
+   * Asserts that exactly one complete JSON value has been consumed with no
+   * trailing content.
+   *
+   * @throws {SyntaxError} If the decoder is still inside a nested structure,
+   *   or if non-whitespace characters remain after the value.
+   */
   checkEOF(): void {
     if (this.#state.depth() > 1) {
       throw new SyntaxError(`Unexpected end of input`);
@@ -43,30 +63,72 @@ class Decoder {
     }
   }
 
+  /**
+   * Returns the current nesting depth of the structural state.
+   *
+   * @returns The current nesting depth — `1` at the top level, incremented by each open object or array.
+   */
   depth(): number {
     return this.#state.depth();
   }
 
+  /**
+   * Signals that no more bytes will arrive (end of stream).
+   *
+   * After calling this, number tokens no longer require a trailing byte to
+   * confirm their end.
+   */
   end(): void {
     this.#cursor.end();
   }
 
+  /**
+   * Returns the absolute byte offset at the end of the last consumed token.
+   *
+   * @returns The global byte offset from the start of the stream.
+   */
   inputOffset(): number {
     return this.#cursor.previousOffsetEnd();
   }
 
+  /**
+   * Checks whether the current context expects an object key.
+   *
+   * @returns `true` if the next token must be a string serving as an object name, `false` otherwise.
+   */
   needObjectName(): boolean {
     return this.#state.needObjectName();
   }
 
+  /**
+   * Returns the most recently consumed object key string.
+   *
+   * @returns The current object property name, or an empty string if not inside an object.
+   */
   lastObjectName(): string {
     return this.#state.lastObjectName();
   }
 
+  /**
+   * Appends the next byte chunk from the stream to the input buffer.
+   *
+   * @param bytes The incoming UTF-8 bytes.
+   */
   push(bytes: Uint8Array): void {
     this.#cursor.appendBytes(bytes);
   }
 
+  /**
+   * Peeks at the kind of the next token without consuming it.
+   *
+   * Skips leading whitespace and validates any required structural delimiter
+   * (`","` or `":"`).
+   * The result is cached until the next call to {@link readToken},
+   * {@link readValue}, or {@link skipValue}.
+   *
+   * @returns The {@link Kind} of the next token, or `undefined` if more bytes are needed to determine it.
+   * @throws {SyntacticError} If an invalid character or unexpected delimiter is encountered.
+   */
   peekKind(): Kind | undefined {
     if (this.#cursor.peekPosition > 0) {
       if (this.#cursor.peekError) {
@@ -130,11 +192,25 @@ class Decoder {
     return kind;
   }
 
+  /**
+   * Resets the decoder to its initial state, discarding all buffered bytes
+   * and structural state.
+   */
   reset(): void {
     this.#cursor = new Cursor(new Uint8Array());
     this.#state = new State(this.#options);
   }
 
+  /**
+   * Consumes and returns the next token from the input buffer.
+   *
+   * For structural tokens (`{`, `}`, `[`, `]`), the state machine is updated
+   * accordingly. For string tokens that serve as object names, the name is
+   * recorded in the state.
+   *
+   * @returns The next {@link Token}, or `undefined` if more bytes are needed.
+   * @throws {SyntacticError} If the token is malformed or structurally invalid.
+   */
   readToken(): Token | undefined {
     const kind = this.peekKind();
 
@@ -201,6 +277,16 @@ class Decoder {
     return new Token(this.#cursor.previousBytes());
   }
 
+  /**
+   * Consumes and returns the next complete JSON value from the input buffer.
+   *
+   * For composite values (objects and arrays), the raw bytes are captured as
+   * a single unit without entering the nested structure. For string values that
+   * serve as object names, the name is recorded in the state.
+   *
+   * @returns The next {@link Value}, or `undefined` if more bytes are needed.
+   * @throws {SyntacticError} If the value is malformed or structurally invalid.
+   */
   readValue(): Value | undefined {
     const kind = this.peekKind();
 
@@ -251,6 +337,12 @@ class Decoder {
     return new Value(bytes);
   }
 
+  /**
+   * Consumes the next complete JSON value without returning its bytes.
+   *
+   * @returns `true` if a value was consumed, `false` if more bytes are needed.
+   * @throws {SyntacticError} If the value is malformed or structurally invalid.
+   */
   skipValue(): boolean {
     const kind = this.peekKind();
 
@@ -277,10 +369,22 @@ class Decoder {
     return true;
   }
 
+  /**
+   * Generates a JSON Pointer representing a location relative to the current
+   * decoding position.
+   *
+   * @param where `-1` for the previously processed value, `0` for the current scope, `1` for the next value.
+   * @returns A {@link Pointer} representing the absolute path.
+   */
   stackPointer(where: 0 | 1 | -1 = 1): Pointer {
     return this.#state.stackPointer(where);
   }
 
+  /**
+   * Returns the unconsumed portion of the input buffer.
+   *
+   * @returns A subarray of bytes that have not yet been processed.
+   */
   unreadBytes(): Uint8Array {
     return this.#cursor.unreadBytes();
   }

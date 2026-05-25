@@ -13,6 +13,8 @@ type JSONTextDecoderOptions = DecoderOptions;
  * Feed byte chunks via {@link push} then consume tokens with
  * {@link readToken} / {@link readValue} / {@link skipValue}.
  * Call {@link end} when the stream is exhausted to flush any buffered state.
+ *
+ * @public
  */
 class JSONTextDecoder {
   #decoder: Decoder;
@@ -28,15 +30,17 @@ class JSONTextDecoder {
   /**
    * Asserts that the input has been fully consumed.
    *
-   * @throws {SyntacticError} If there are unread bytes remaining.
+   * @throws {SyntaxError} If the decoder is still inside a nested structure,
+   *   or if non-whitespace characters remain after the value.
    */
   checkEOF(): void {
     this.#decoder.checkEOF();
   }
 
   /**
-   * The current nesting depth — `0` at top level, incremented inside each
-   * object or array.
+   * Returns the current nesting depth of the structural state.
+   *
+   * @returns The current nesting depth — `1` at the top level, incremented by each open object or array.
    */
   depth(): number {
     return this.#decoder.depth();
@@ -45,18 +49,18 @@ class JSONTextDecoder {
   /**
    * Signals that no more input will be pushed.
    *
-   * Validates that any incomplete value is properly terminated.
-   *
-   * @throws {SyntacticError} If the input ends in the middle of a value.
+   * After calling this, number tokens no longer require a trailing byte to
+   * confirm their end.
    */
   end(): void {
     this.#decoder.end();
   }
 
   /**
-   * The byte offset of the next unread byte within the total input seen so far.
+   * The byte offset of the end of the last consumed token within the total
+   * input seen so far.
    *
-   * @returns The byte offset of the next unread byte, or the total length of all
+   * @returns The global byte offset from the start of the stream.
    */
   inputOffset(): number {
     return this.#decoder.inputOffset();
@@ -76,6 +80,7 @@ class JSONTextDecoder {
    * or `undefined` if no complete token is available yet.
    *
    * @returns The {@link Kind} of the next token, or `undefined` if no complete token is available yet.
+   * @throws {SyntacticError} If an invalid character or unexpected delimiter is encountered.
    */
   peekKind(): Kind | undefined {
     return this.#decoder.peekKind();

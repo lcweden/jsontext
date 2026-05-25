@@ -12,6 +12,8 @@ type JSONTextEncoderOptions = EncoderOptions;
  * Write tokens or values via {@link writeToken} / {@link writeValue}, then
  * retrieve the accumulated output with {@link bytes}. Call {@link reset} to
  * start a new document without creating a new instance.
+ *
+ * @public
  */
 class JSONTextEncoder {
   #encoder: Encoder;
@@ -24,10 +26,10 @@ class JSONTextEncoder {
   }
 
   /**
-   * The current nesting depth — `0` at top level, incremented inside each
-   * object or array.
+   * The current nesting depth — `1` at the top level, incremented by each
+   * open object or array.
    *
-   * @returns The current nesting depth.
+   * @returns The current nesting depth — `1` at the top level, incremented by each open object or array.
    */
   depth(): number {
     return this.#encoder.depth();
@@ -72,6 +74,8 @@ class JSONTextEncoder {
    * Drains and returns the bytes accumulated in the output buffer since the
    * last call. The internal buffer is cleared; structural state (nesting,
    * delimiters) is preserved so subsequent writes continue the same document.
+   *
+   * @returns A copy of the bytes written since the last `takeBytes` call.
    */
   takeBytes(): Uint8Array {
     return this.#encoder.takeBytes();

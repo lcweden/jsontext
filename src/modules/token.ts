@@ -6,10 +6,11 @@ import { decodeText, encodeText } from "#src/utils/text";
 /**
  * Represents a single JSON token.
  *
- * A token is the smallest unit in a JSON document — either a scalar value
- * (`null`, `true`, `false`, a number, or a string) or a structural symbol
- * (`{`, `}`, `[`, `]`). Tokens hold their raw UTF-8 bytes and expose typed
- * accessor methods for converting to JavaScript primitives.
+ * A token is either a scalar value (`null`, `true`, `false`, a number, or a
+ * string) or a structural symbol (`{`, `}`, `[`, `]`). Unlike {@link Value},
+ * leading whitespace is not permitted.
+ *
+ * @public
  */
 class Token {
   #bytes: Uint8Array;
@@ -78,9 +79,12 @@ class Token {
    * @returns A new `Token` parsed from the given text.
    * @throws {SyntaxError} If `value` is not a valid JSON token.
    * @example
+   * ```ts
    * const token = Token.fromText("true"); // or Token.fromText(JSON.stringify(true));
+   *
    * console.log(token.kind); // "true"
    * console.log(token.asBoolean()); // true
+   * ```
    */
   static fromText(value: string): Token {
     const encoded = encodeText(value);
@@ -107,6 +111,12 @@ class Token {
    *
    * @param value - The number to encode.
    * @returns A number token, or a string token for non-finite values.
+   * @example
+   * ```javascript
+   * Token.fromNumber(42).kind       // "number"
+   * Token.fromNumber(NaN).kind      // "string" — encoded as '"NaN"'
+   * Token.fromNumber(Infinity).kind // "string" — encoded as '"Infinity"'
+   * ```
    */
   static fromNumber(value: number): Token {
     if (Number.isNaN(value)) {
@@ -231,7 +241,7 @@ class Token {
   }
 
   /**
-   * Asserts that this token is `null` and returns `null`.
+   * Decodes this token as `null`.
    *
    * @returns `null`.
    * @throws {TypeError} If this token is not of kind {@link KIND.NULL}.
