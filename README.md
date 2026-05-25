@@ -256,7 +256,7 @@ const blob = await new Response(stream).blob();
 ```
 
 > [!TIP]
-> `JSONTextDecoderStream` supports Token-level processing only. If you need to replace values that
+> `JSONTextDecoderStream` supports token-level processing only. If you need to replace values that
 > may be nested inside objects or arrays, you will need to use `JSONTextDecoder` directly.
 
 ## License
