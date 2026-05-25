@@ -2,7 +2,7 @@ import { DEFAULT_DECODER_OPTIONS, KIND, MAX_NESTING_DEPTH } from "#src/common/co
 import Decoder from "#src/modules/decoder";
 import type { Matcher } from "#src/modules/path";
 import Path from "#src/modules/path";
-import type Value from "#src/modules/value";
+import Value from "#src/modules/value";
 import type { DecoderOptions } from "#src/types/options";
 import { encodeText } from "#src/utils/text";
 
@@ -11,6 +11,31 @@ type JSONTextSelectorStreamOptions = DecoderOptions & {
   readableStrategy?: QueuingStrategy<Value>;
 };
 
+/**
+ * A `TransformStream` that decodes a stream of `Uint8Array` byte chunks and
+ * emits only the {@link Value} objects matched by a JSON Path expression.
+ *
+ * Writable side accepts raw JSON bytes. Readable side emits each {@link Value}
+ * whose location in the document satisfies the path. Supports a subset of
+ * RFC 9535 JSON Path syntax:
+ *
+ * - **Root Identifier**: `$`
+ * - **Child Segment**: `.` or `[...]`
+ * - **Descendant Segment**: `..`
+ * - **Name Selector**: `.name` or `['name']`
+ * - **Wildcard Selector**: `.*` or `[*]`
+ * - **Index Selector (positive)**: `[1]`
+ * - **Array Slice Selector (positive)**: `[0:5]` or `[::2]`
+ *
+ * @see https://www.rfc-editor.org/rfc/rfc9535
+ * @public
+ * @example
+ * ```javascript
+ * const response = await fetch(url);
+ * const items = response.body
+ *   .pipeThrough(new JSONTextSelectorStream("$.items[*]"));
+ * ```
+ */
 class JSONTextSelectorStream extends TransformStream<Uint8Array, Value> {
   #decoder: Decoder;
   #matcher: Matcher;
@@ -19,6 +44,11 @@ class JSONTextSelectorStream extends TransformStream<Uint8Array, Value> {
   #pushs: Uint8Array;
   #depth: number;
 
+  /**
+   * @param input - A JSON Path expression string (subset of RFC 9535) selecting which values to emit.
+   * @param options - Decoder and queuing strategy options.
+   * @throws {SyntaxError} If the path expression is invalid.
+   */
   constructor(input: string, options: JSONTextSelectorStreamOptions = {}) {
     const { writableStrategy, readableStrategy, ...rest } = options;
     const decoderOptions = { ...DEFAULT_DECODER_OPTIONS, ...rest };
@@ -47,6 +77,10 @@ class JSONTextSelectorStream extends TransformStream<Uint8Array, Value> {
     this.#depth = 0;
   }
 
+  /**
+   * Reads decoder output step by step, advancing the path matcher, and
+   * enqueues values at positions that satisfy the path.
+   */
   #drain(controller: TransformStreamDefaultController<Value>): void {
     while (true) {
       const kind = this.#decoder.peekKind();
@@ -108,7 +142,7 @@ class JSONTextSelectorStream extends TransformStream<Uint8Array, Value> {
           return;
         }
 
-        controller.enqueue(value);
+        controller.enqueue(new Value(value.bytes, this.#decoder.stackPointer(-1).toString()));
 
         if (pushed) {
           this.#matcher.pop();

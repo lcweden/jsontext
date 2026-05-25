@@ -130,11 +130,11 @@ class JSONTextDecoder {
    * Returns a JSON Pointer string describing a position in the current
    * nesting context.
    *
-   * | `where` | Meaning |
-   * |---------|-------------------------------------------------------------------|
+   * | `where` | Meaning                                                  |
+   * |---------|----------------------------------------------------------|
    * | `1`     | The position of the **next** value to be read (default). |
-   * | `0`     | The position of the **current** container. |
-   * | `-1`    | The position of the **previously** read value. |
+   * | `0`     | The position of the **current** container.               |
+   * | `-1`    | The position of the **previously** read value.           |
    *
    * @param where - Which position to return. Defaults to `1`.
    * @returns A JSON Pointer string, e.g. `"/foo/0"`.

@@ -19,17 +19,18 @@ import { compareUTF16, consumeWhitespace } from "#src/utils/wire";
 class Value {
   #bytes: Uint8Array;
   #kind: Kind;
+  #pointer?: string;
 
   /**
    * Creates a `Value` from raw UTF-8 bytes.
-   *
    * Leading whitespace is accepted and preserved in {@link bytes}.
    *
    * @param bytes - Raw UTF-8 bytes of a complete JSON value.
+   * @param pointer - Optional JSON Pointer (RFC 6901) indicating where this valuewas located in the source document. Typically set by {@link JSONTextSelectorStream}.
    * @throws {RangeError} If `bytes` is empty.
    * @throws {SyntaxError} If no valid JSON token is found after skipping leading whitespace.
    */
-  constructor(bytes: Uint8Array) {
+  constructor(bytes: Uint8Array, pointer: string | undefined = undefined) {
     if (!bytes.length) {
       throw new RangeError("Value must have at least one byte");
     }
@@ -48,6 +49,12 @@ class Value {
 
     this.#bytes = bytes;
     this.#kind = kind;
+    this.#pointer = pointer;
+  }
+
+  /** The raw UTF-8 bytes of this value, including any leading whitespace. */
+  get bytes(): Uint8Array {
+    return this.#bytes;
   }
 
   /** The {@link Kind} of the top-level token of this value. */
@@ -55,9 +62,9 @@ class Value {
     return this.#kind;
   }
 
-  /** The raw UTF-8 bytes of this value, including any leading whitespace. */
-  get bytes(): Uint8Array {
-    return this.#bytes;
+  /** The JSON Pointer (RFC 6901) describing where this value was located in the source document, or `undefined` if the value was not produced by a stream API. */
+  get pointer(): string | undefined {
+    return this.#pointer;
   }
 
   /**
