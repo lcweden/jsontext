@@ -457,10 +457,20 @@ try {
 }
 ```
 
+## Performance
+
+`jsontext` is designed for flat memory usage regardless of input size. The following shows a
+passthrough run on a 1 GB file — heap stays near baseline throughout:
+
+![Passthrough Result](https://github.com/user-attachments/assets/6d8d795b-ba11-41c1-8993-ac5e15088524)
+
+For full profiling results across passthrough, round-trip, and query scenarios, see
+[docs/performance.md](docs/performance.md).
+
 ## Examples
 
 Below are some simple examples demonstrating how to use `jsontext` for common JSON processing tasks.
-For more examples, see the [documentation](/docs/).
+For more examples, see the [docs/](docs/).
 
 ### Replace `null` with an empty string
 
