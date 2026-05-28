@@ -32,6 +32,8 @@ decoder.end();
 decoder.checkEOF();
 ```
 
+![Passthrough Result](https://github.com/user-attachments/assets/6d8d795b-ba11-41c1-8993-ac5e15088524)
+
 ## Round Trip
 
 This scenario represents a full I/O cycle. We stream bytes from the 1 GB file, decode them into
@@ -66,6 +68,8 @@ decoder.checkEOF();
 output.end();
 ```
 
+![Round Trip Result](https://github.com/user-attachments/assets/f8c6fc35-0227-40c3-98a2-c9503a366299)
+
 > [!IMPORTANT]
 > In this scenario, why don't we just use `JSONTextDecoderStream` and `JSONTextEncoderStream`? In
 > `Node.js`, we must use `.toWeb()` to convert the streams to `TransformStream`, which adds an extra
@@ -93,3 +97,5 @@ for await (const value of Readable.toWeb(stream).pipeThrough(selector)) {
 
 console.log(`Total values: ${count}`); // Total values: 565255
 ```
+
+![Query Result](https://github.com/user-attachments/assets/2a4e679f-e76f-43f5-bece-487d9a925b91)
