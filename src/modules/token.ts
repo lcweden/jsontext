@@ -155,7 +155,7 @@ class Token {
    * @returns A new `Token` backed by a cloned `Uint8Array`.
    */
   clone(): Token {
-    return new Token(this.bytes.slice());
+    return new Token(this.#bytes.slice());
   }
 
   /**
@@ -166,11 +166,11 @@ class Token {
    */
   isScalar(): boolean {
     return (
-      this.kind === KIND.STRING ||
-      this.kind === KIND.NUMBER ||
-      this.kind === KIND.TRUE ||
-      this.kind === KIND.FALSE ||
-      this.kind === KIND.NULL
+      this.#kind === KIND.STRING ||
+      this.#kind === KIND.NUMBER ||
+      this.#kind === KIND.TRUE ||
+      this.#kind === KIND.FALSE ||
+      this.#kind === KIND.NULL
     );
   }
 
