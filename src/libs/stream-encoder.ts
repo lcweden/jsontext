@@ -3,8 +3,15 @@ import Encoder from "#src/modules/encoder";
 import type Token from "#src/modules/token";
 import type { EncoderOptions } from "#src/types/options";
 
+/**
+ * Options for {@link JSONTextEncoderStream}.
+ *
+ * @public
+ */
 type JSONTextEncoderStreamOptions = EncoderOptions & {
+  /** Queuing strategy for the writable side. */
   writableStrategy?: QueuingStrategy<Token>;
+  /** Queuing strategy for the readable side. */
   readableStrategy?: QueuingStrategy<Uint8Array>;
 };
 

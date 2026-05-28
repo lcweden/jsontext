@@ -88,7 +88,7 @@ class Value {
   /**
    * Returns a canonicalized copy of this value.
    *
-   * Canonicalization recursively sorts object keys by UTF-16 code unit order
+   * JSON Canonicalization Scheme (RFC 8785) recursively sorts object keys by UTF-16 code unit order
    * and normalizes numbers. The result is deterministic and idempotent.
    *
    * @returns A new `Value` in canonical form.
@@ -158,7 +158,7 @@ class Value {
    * @throws {TypeError} If the bytes contain invalid UTF-8 sequences.
    */
   text(): string {
-    return decodeText(this.bytes, true);
+    return decodeText(this.#bytes, true);
   }
 
   /**
@@ -172,7 +172,7 @@ class Value {
    * @throws {SyntacticError} If the bytes do not represent valid JSON.
    */
   *tokens(): Generator<Token> {
-    const decoder = new Decoder(this.bytes, DEFAULT_DECODER_OPTIONS);
+    const decoder = new Decoder(this.#bytes, DEFAULT_DECODER_OPTIONS);
 
     while (true) {
       const token = decoder.readToken();

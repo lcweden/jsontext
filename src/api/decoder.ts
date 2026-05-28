@@ -5,6 +5,11 @@ import type Value from "#src/modules/value";
 import type { Kind } from "#src/types/kind";
 import type { DecoderOptions } from "#src/types/options";
 
+/**
+ * Options for {@link JSONTextDecoder}.
+ *
+ * @public
+ */
 type JSONTextDecoderOptions = DecoderOptions;
 
 /**
