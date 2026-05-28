@@ -6,8 +6,15 @@ import Value from "#src/modules/value";
 import type { DecoderOptions } from "#src/types/options";
 import { encodeText } from "#src/utils/text";
 
+/**
+ * Options for {@link JSONTextSelectorStream}.
+ *
+ * @public
+ */
 type JSONTextSelectorStreamOptions = DecoderOptions & {
+  /** Queuing strategy for the writable side. */
   writableStrategy?: QueuingStrategy<Uint8Array>;
+  /** Queuing strategy for the readable side. */
   readableStrategy?: QueuingStrategy<Value>;
 };
 

@@ -4,6 +4,11 @@ import type Token from "#src/modules/token";
 import type Value from "#src/modules/value";
 import type { EncoderOptions } from "#src/types/options";
 
+/**
+ * Options for {@link JSONTextEncoder}.
+ *
+ * @public
+ */
 type JSONTextEncoderOptions = EncoderOptions;
 
 /**

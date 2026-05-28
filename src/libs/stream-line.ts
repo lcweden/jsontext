@@ -3,8 +3,15 @@ import Decoder from "#src/modules/decoder";
 import type Value from "#src/modules/value";
 import type { DecoderOptions } from "#src/types/options";
 
+/**
+ * Options for {@link JSONTextLineStream}.
+ *
+ * @public
+ */
 type JSONTextLineStreamOptions = DecoderOptions & {
+  /** Queuing strategy for the writable side. */
   writableStrategy?: QueuingStrategy<Uint8Array>;
+  /** Queuing strategy for the readable side. */
   readableStrategy?: QueuingStrategy<Value>;
 };
 
