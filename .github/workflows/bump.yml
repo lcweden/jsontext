@@ -1,0 +1,62 @@
+name: Bump
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "new version(e.g., 1.2.3)"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-pr:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: lts/*
+          cache: npm
+          registry-url: https://registry.npmjs.org/
+
+      - name: Store Version
+        run: |
+          TARGET_VERSION="${{ github.event.inputs.version }}"
+          TARGET_VERSION="${TARGET_VERSION#v}"
+          echo "VERSION=$TARGET_VERSION" >> $GITHUB_ENV
+
+      - name: Update Package Version
+        run: |
+          jq ".version = \"$VERSION\"" package.json > tmp.json && mv tmp.json package.json
+          jq ".version = \"$VERSION\"" deno.json > tmp.json && mv tmp.json deno.json
+          npm install --package-lock-only --ignore-scripts
+
+      - name: Setup Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Git Commit
+        run: |
+          BRANCH_NAME="release/v$VERSION"
+          git checkout -b "$BRANCH_NAME"
+          git add --all
+          git commit -m "chore: bump version to v$VERSION"
+          git push -u origin "$BRANCH_NAME"
+
+      - name: Pull Request
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr create \
+            --title "release/v$VERSION" \
+            --body "This pull request bumps the version to v$VERSION." \
+            --head "release/v$VERSION" \
+            --base main
