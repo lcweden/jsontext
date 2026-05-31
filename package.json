@@ -1,6 +1,6 @@
 {
   "name": "jsontext",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "license": "MIT",
   "description": "A state machine for incremental JSON processing.",
   "keywords": [
@@ -29,7 +29,10 @@
       "import": "./dist/index.js"
     }
   },
-  "files": ["dist/**/*", "!dist/**/*.map"],
+  "files": [
+    "dist/**/*",
+    "!dist/**/*.map"
+  ],
   "author": {
     "name": "lcweden",
     "url": "https://github.com/lcweden"
@@ -52,7 +55,9 @@
     "test": "deno task test"
   },
   "sideEffects": false,
-  "engines": { "node": ">=18" },
+  "engines": {
+    "node": ">=18"
+  },
   "devDependencies": {
     "@types/node": "^25.9.1",
     "typescript": "~6.0.2",
