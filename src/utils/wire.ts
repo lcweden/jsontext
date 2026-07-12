@@ -112,13 +112,33 @@ function consumeFalse(bytes: Uint8Array, position: number): number {
  * @returns The number of bytes consumed if a string literal is found, otherwise 0.
  */
 function consumeString(bytes: Uint8Array, position: number, validateUTF8 = true): number {
+  const result = consumeStringResumable(bytes, position, 0, validateUTF8);
+
+  return result.completed ? result.consumed : 0;
+}
+
+/**
+ * Consumes a string literal from the given position, supporting resumption from a previous offset.
+ * @param bytes The Uint8Array bytes to consume from.
+ * @param position The position in the bytes to start consuming.
+ * @param offset The relative number of bytes already scanned in previous chunks.
+ * @param validateUTF8 Whether to validate the string as UTF-8.
+ * @returns An object containing the number of bytes consumed (or the scan offset if incomplete) and whether the string is complete.
+ */
+function consumeStringResumable(
+  bytes: Uint8Array,
+  position: number,
+  offset: number,
+  validateUTF8 = true,
+): { consumed: number; completed: boolean } {
   if (position >= bytes.length || bytes[position] !== ASCII.QUOTE) {
-    return 0;
+    return { consumed: 0, completed: false };
   }
 
   let inEscape = false;
+  let index = offset > 0 ? position + offset : position + 1;
 
-  for (let index = position + 1; index < bytes.length; index++) {
+  for (; index < bytes.length; index++) {
     const byte = bytes[index];
 
     if (inEscape) {
@@ -127,12 +147,15 @@ function consumeString(bytes: Uint8Array, position: number, validateUTF8 = true)
     }
 
     if (byte === ASCII.BACKSLASH) {
+      if (index === bytes.length - 1) {
+        return { consumed: index - position, completed: false };
+      }
       inEscape = true;
       continue;
     }
 
     if (byte < ASCII.SPACE) {
-      return 0;
+      return { consumed: 0, completed: false };
     }
 
     if (byte === ASCII.QUOTE) {
@@ -141,16 +164,16 @@ function consumeString(bytes: Uint8Array, position: number, validateUTF8 = true)
       if (validateUTF8) {
         try {
           decodeText(chunk, true);
-        } catch (_error) {
-          return 0;
+        } catch {
+          return { consumed: 0, completed: false };
         }
       }
 
-      return index - position + 1;
+      return { consumed: index - position + 1, completed: true };
     }
   }
 
-  return 0;
+  return { consumed: index - position, completed: false };
 }
 
 /**
@@ -332,6 +355,7 @@ export {
   consumeSimpleNumber,
   consumeSimpleString,
   consumeString,
+  consumeStringResumable,
   consumeTrue,
   consumeWhitespace,
 };

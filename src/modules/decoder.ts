@@ -15,7 +15,7 @@ import {
   consumeNumber,
   consumeSimpleNumber,
   consumeSimpleString,
-  consumeString,
+  consumeStringResumable,
   consumeTrue,
   consumeWhitespace,
 } from "#src/utils/wire";
@@ -28,6 +28,7 @@ import {
  * @internal
  */
 class Decoder {
+  #offset: number;
   #cursor: Cursor;
   #state: State;
   #options: DecoderOptions;
@@ -39,6 +40,7 @@ class Decoder {
    * @param options Decoder configuration options.
    */
   constructor(bytes: Uint8Array, options: DecoderOptions) {
+    this.#offset = 0;
     this.#cursor = new Cursor(bytes);
     this.#state = new State(options);
     this.#options = options;
@@ -197,6 +199,7 @@ class Decoder {
    * and structural state.
    */
   reset(): void {
+    this.#offset = 0;
     this.#cursor = new Cursor(new Uint8Array());
     this.#state = new State(this.#options);
   }
@@ -407,8 +410,25 @@ class Decoder {
     }
 
     if (kind === KIND.STRING) {
-      return consumeSimpleString(bytes, position) ||
-        consumeString(bytes, position, !this.#options.allowInvalidUTF8);
+      if (this.#offset === 0) {
+        const size = consumeSimpleString(bytes, position);
+        if (size > 0) return size;
+      }
+
+      const result = consumeStringResumable(
+        bytes,
+        position,
+        this.#offset,
+        !this.#options.allowInvalidUTF8,
+      );
+
+      if (!result.completed) {
+        this.#offset = result.consumed;
+        return 0;
+      }
+
+      this.#offset = 0;
+      return result.consumed;
     }
 
     if (kind === KIND.NUMBER) {
@@ -529,14 +549,27 @@ class Decoder {
   }
 
   #consumeString(start: number): number {
-    let size = consumeSimpleString(this.#cursor.bytes, start);
+    let size = 0;
+
+    if (this.#offset === 0) {
+      size = consumeSimpleString(this.#cursor.bytes, start);
+    }
 
     if (size === 0) {
-      size = consumeString(this.#cursor.bytes, start, !this.#options.allowInvalidUTF8);
+      const result = consumeStringResumable(
+        this.#cursor.bytes,
+        start,
+        this.#offset,
+        !this.#options.allowInvalidUTF8,
+      );
 
-      if (size === 0) {
+      if (!result.completed) {
+        this.#offset = result.consumed;
         return 0;
       }
+
+      size = result.consumed;
+      this.#offset = 0;
     }
 
     if (this.#state.needObjectName()) {
