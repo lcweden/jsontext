@@ -7,6 +7,7 @@ import {
   consumeSimpleNumber,
   consumeSimpleString,
   consumeString,
+  consumeStringResumable,
   consumeTrue,
   consumeWhitespace,
 } from "#src/utils/wire";
@@ -254,6 +255,65 @@ Deno.test("[utils] wire", async (test) => {
       for (const { actual, expected } of cases) {
         assertEquals(actual, expected);
       }
+    });
+  });
+
+  await test.step("[function] consumeStringResumable", async (test) => {
+    await test.step("resume scanning a string across chunks", () => {
+      const full = e('"hello world"');
+      const partial = full.subarray(0, full.length - 1);
+
+      const first = consumeStringResumable(partial, 0, 0);
+
+      assertEquals(first, {
+        consumed: partial.length,
+        completed: false,
+      });
+
+      const second = consumeStringResumable(full, 0, first.consumed);
+
+      assertEquals(second, {
+        consumed: full.length,
+        completed: true,
+      });
+    });
+
+    await test.step("resume correctly when a chunk ends with a backslash", () => {
+      const full = e('"\\""');
+      const partial = full.subarray(0, 2);
+
+      const first = consumeStringResumable(partial, 0, 0);
+
+      assertEquals(first, {
+        consumed: 1,
+        completed: false,
+      });
+
+      const second = consumeStringResumable(full, 0, first.consumed);
+
+      assertEquals(second, {
+        consumed: full.length,
+        completed: true,
+      });
+    });
+
+    await test.step("defer final UTF-8 validation until the closing quote is present", () => {
+      const full = new Uint8Array([0x22, 0x80, 0x22]);
+      const partial = full.subarray(0, 2);
+
+      const first = consumeStringResumable(partial, 0, 0);
+
+      assertEquals(first, {
+        consumed: partial.length,
+        completed: false,
+      });
+
+      const second = consumeStringResumable(full, 0, first.consumed);
+
+      assertEquals(second, {
+        consumed: 0,
+        completed: false,
+      });
     });
   });
 

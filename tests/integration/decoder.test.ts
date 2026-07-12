@@ -244,6 +244,77 @@ Deno.test("[integration] JSONTextDecoder", async (test) => {
       assertEquals(decoder.readValue()?.text(), "1");
       assertEquals(decoder.readValue()?.text(), "2");
     });
+
+    await test.step("should read an object string value split across many chunks", () => {
+      const value = "a".repeat(64 * 1024);
+      const decoder = new JSONTextDecoder();
+
+      decoder.push(encodeText(`{"key":"${value.slice(0, 1024)}`));
+
+      assertEquals(decoder.readToken()?.kind, KIND.OBJECT_BEGIN);
+      assertEquals(decoder.readToken()?.asString(), "key");
+      assertEquals(decoder.readToken(), undefined);
+
+      for (let i = 1024; i < value.length; i += 1024) {
+        decoder.push(encodeText(value.slice(i, i + 1024)));
+        assertEquals(decoder.readToken(), undefined);
+      }
+
+      decoder.push(encodeText('"}'));
+      decoder.end();
+
+      const token = decoder.readToken();
+
+      assertEquals(token?.kind, KIND.STRING);
+      assertEquals(token?.asString(), value);
+      assertEquals(decoder.readToken()?.kind, KIND.OBJECT_END);
+      assertEquals(decoder.readToken(), undefined);
+    });
+
+    await test.step("should preserve an escaped quote split across chunks", () => {
+      const decoder = new JSONTextDecoder();
+      const first = '{"key":"say ' + "\\";
+      const second = '"hi\\""}';
+
+      decoder.push(encodeText(first));
+
+      assertEquals(decoder.readToken()?.kind, KIND.OBJECT_BEGIN);
+      assertEquals(decoder.readToken()?.asString(), "key");
+      assertEquals(decoder.readToken(), undefined);
+
+      decoder.push(encodeText(second));
+      decoder.end();
+
+      const token = decoder.readToken();
+
+      assertEquals(token?.kind, KIND.STRING);
+      assertEquals(token?.asString(), 'say "hi"');
+      assertEquals(decoder.readToken()?.kind, KIND.OBJECT_END);
+      assertEquals(decoder.readToken(), undefined);
+    });
+
+    await test.step("should read a complete object value after a long string spans many chunks", () => {
+      const value = "b".repeat(64 * 1024);
+      const decoder = new JSONTextDecoder();
+
+      decoder.push(encodeText(`{"key":"${value.slice(0, 1024)}`));
+
+      assertEquals(decoder.readValue(), undefined);
+
+      for (let i = 1024; i < value.length; i += 1024) {
+        decoder.push(encodeText(value.slice(i, i + 1024)));
+        assertEquals(decoder.readValue(), undefined);
+      }
+
+      decoder.push(encodeText('"}'));
+      decoder.end();
+
+      const parsed = decoder.readValue();
+
+      assertEquals(parsed?.kind, KIND.OBJECT_BEGIN);
+      assertEquals(parsed?.text(), `{"key":"${value}"}`);
+      assertEquals(decoder.readValue(), undefined);
+    });
   });
 
   await test.step("[scenario] options", async (test) => {
