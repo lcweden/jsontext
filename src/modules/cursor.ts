@@ -5,12 +5,13 @@
  */
 class Cursor {
   #baseOffset: number;
+  #bytes: Uint8Array;
   #ended: boolean;
+  #owned: boolean;
   #previousStart: number;
   #previousEnd: number;
   #peekPosition: number;
   #peekError: Error | null;
-  #bytes: Uint8Array;
 
   /**
    * Creates a new Cursor instance starting with an initial chunk of bytes.
@@ -19,12 +20,13 @@ class Cursor {
    */
   constructor(bytes: Uint8Array) {
     this.#baseOffset = 0;
+    this.#bytes = bytes;
     this.#ended = false;
+    this.#owned = false;
     this.#previousStart = 0;
     this.#previousEnd = 0;
     this.#peekPosition = 0;
     this.#peekError = null;
-    this.#bytes = bytes;
   }
 
   /**
@@ -87,25 +89,48 @@ class Cursor {
 
   /**
    * Appends a newly received chunk of bytes to the cursor.
-   * - **Fast-Path**: If all previous bytes were consumed, it simply reassigns the internal pointer.
-   * - **Slow-Path**: If there are unread bytes, it allocates a new buffer and merges them.
    *
    * @param bytes The new Uint8Array chunk arriving from the stream.
    */
   appendBytes(bytes: Uint8Array): void {
     const unread = this.unreadBytes();
+    const start = this.#previousEnd;
 
     if (unread.length > 0) {
-      const merged = new Uint8Array(unread.length + bytes.length);
+      const capacity = start + unread.length + bytes.length;
+      const length = unread.length + bytes.length;
 
-      merged.set(unread, 0);
-      merged.set(bytes, unread.length);
+      if (this.#owned && capacity <= this.#bytes.buffer.byteLength) {
+        const buffer = this.#bytes.buffer;
 
-      this.#bytes = merged;
+        this.#bytes = new Uint8Array(buffer, 0, capacity);
+        this.#bytes.set(bytes, start + unread.length);
+
+        return;
+      }
+
+      if (this.#owned && length <= this.#bytes.buffer.byteLength) {
+        const buffer = this.#bytes.buffer;
+        const view = new Uint8Array(buffer);
+
+        view.copyWithin(0, start, start + unread.length);
+
+        this.#bytes = new Uint8Array(buffer, 0, length);
+        this.#bytes.set(bytes, unread.length);
+      } else {
+        const capacity = this.#owned ? this.#bytes.buffer.byteLength : 0;
+        const array = new Uint8Array(Math.max(length, capacity * 2));
+
+        array.set(unread, 0);
+        array.set(bytes, unread.length);
+
+        this.#bytes = new Uint8Array(array.buffer, 0, length);
+        this.#owned = true;
+      }
     } else {
       this.#bytes = bytes;
+      this.#owned = false;
     }
-
     if (this.#peekPosition > 0) {
       this.#peekPosition -= this.#previousEnd;
     }
