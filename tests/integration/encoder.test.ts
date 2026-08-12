@@ -1,7 +1,7 @@
+import Token from "#src/api/token";
+import Value from "#src/api/value";
 import { SyntacticError } from "#src/common/errors";
 import { JSONTextEncoder } from "#src/index";
-import Token from "#src/modules/token";
-import Value from "#src/modules/value";
 import { decodeText, encodeText } from "#src/utils/text";
 import { assertEquals, assertThrows } from "#std/assert";
 

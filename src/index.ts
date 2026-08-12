@@ -9,8 +9,8 @@ export type { Kind } from "#src/types/kind";
 
 export { default as JSONTextDecoder } from "#src/api/decoder";
 export { default as JSONTextEncoder } from "#src/api/encoder";
-export { default as Token } from "#src/modules/token";
-export { default as Value } from "#src/modules/value";
+export { default as Token } from "#src/api/token";
+export { default as Value } from "#src/api/value";
 
 export { default as JSONTextDecoderStream } from "#src/libs/stream-decoder";
 export { default as JSONTextEncoderStream } from "#src/libs/stream-encoder";

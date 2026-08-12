@@ -1,5 +1,5 @@
+import Token from "#src/api/token";
 import { KIND } from "#src/common/constants";
-import Token from "#src/modules/token";
 import { encodeText as e } from "#src/utils/text";
 import { assertEquals, assertThrows } from "#std/assert";
 

@@ -1,6 +1,6 @@
+import Value from "#src/api/value";
 import { DEFAULT_DECODER_OPTIONS } from "#src/common/constants";
-import Decoder from "#src/modules/decoder";
-import type Value from "#src/modules/value";
+import Parser from "#src/modules/parser";
 import type { DecoderOptions } from "#src/types/options";
 
 /**
@@ -32,7 +32,7 @@ type JSONTextLineStreamOptions = DecoderOptions & {
  * ```
  */
 class JSONTextLineStream extends TransformStream<Uint8Array, Value> {
-  #decoder: Decoder;
+  #parser: Parser;
 
   /**
    * @param options - Decoder and queuing strategy options.
@@ -44,11 +44,11 @@ class JSONTextLineStream extends TransformStream<Uint8Array, Value> {
     super(
       {
         transform: (chunk, controller) => {
-          this.#decoder.push(chunk);
+          this.#parser.push(chunk);
           this.#drain(controller);
         },
         flush: (controller) => {
-          this.#decoder.end();
+          this.#parser.close();
           this.#drain(controller);
         },
       },
@@ -56,15 +56,15 @@ class JSONTextLineStream extends TransformStream<Uint8Array, Value> {
       readableStrategy,
     );
 
-    this.#decoder = new Decoder(new Uint8Array(), decoderOptions);
+    this.#parser = new Parser(new Uint8Array(), decoderOptions);
   }
 
   /**
    * Drains all available values from the decoder into the readable side.
    */
   #drain(controller: TransformStreamDefaultController<Value>): void {
-    for (let value; (value = this.#decoder.readValue()) !== undefined;) {
-      controller.enqueue(value);
+    for (let bytes; (bytes = this.#parser.readValue()) !== undefined;) {
+      controller.enqueue(new Value(bytes));
     }
   }
 }

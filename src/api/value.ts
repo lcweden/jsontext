@@ -1,6 +1,6 @@
+import Token from "#src/api/token";
 import { ASCII, DEFAULT_DECODER_OPTIONS, KIND } from "#src/common/constants";
-import Decoder from "#src/modules/decoder";
-import type Token from "#src/modules/token";
+import Parser from "#src/modules/parser";
 import type { Kind } from "#src/types/kind";
 import { normalize } from "#src/utils/kind";
 import { decodeText, encodeText } from "#src/utils/text";
@@ -100,10 +100,10 @@ class Value {
    * ```
    */
   canonicalize(): Value {
-    const decoder = new Decoder(this.#bytes, { allowDuplicateNames: true });
-    decoder.end();
+    const parser = new Parser(this.#bytes, { allowDuplicateNames: true });
+    parser.close();
 
-    return new Value(this.#processValue(decoder));
+    return new Value(this.#processValue(parser));
   }
 
   /**
@@ -123,17 +123,17 @@ class Value {
    */
   isValid(): boolean {
     try {
-      const decoder = new Decoder(this.#bytes, {});
+      const parser = new Parser(this.#bytes, {});
 
-      decoder.end();
+      parser.close();
 
-      const result = decoder.readValue();
+      const result = parser.readValue();
 
       if (result === undefined) {
         return false;
       }
 
-      decoder.checkEOF();
+      parser.checkEOF();
 
       return true;
     } catch {
@@ -172,16 +172,16 @@ class Value {
    * @throws {SyntacticError} If the bytes do not represent valid JSON.
    */
   *tokens(): Generator<Token> {
-    const decoder = new Decoder(this.#bytes, DEFAULT_DECODER_OPTIONS);
+    const parser = new Parser(this.#bytes, DEFAULT_DECODER_OPTIONS);
 
     while (true) {
-      const token = decoder.readToken();
+      const bytes = parser.readToken();
 
-      if (token === undefined) {
+      if (bytes === undefined) {
         break;
       }
 
-      yield token;
+      yield new Token(bytes);
     }
   }
 
@@ -193,29 +193,27 @@ class Value {
    * @param decoder The decoder positioned at the start of the value.
    * @returns The canonicalized UTF-8 bytes of the value.
    */
-  #processValue(decoder: Decoder): Uint8Array {
-    const kind = decoder.peekKind();
+  #processValue(parser: Parser): Uint8Array {
+    const kind = parser.peekKind();
 
     if (kind === KIND.OBJECT_BEGIN) {
-      return this.#processObject(decoder);
+      return this.#processObject(parser);
     }
 
     if (kind === KIND.ARRAY_BEGIN) {
-      return this.#processArray(decoder);
+      return this.#processArray(parser);
     }
 
     if (kind === KIND.NUMBER) {
-      const token = decoder.readToken()!;
-      const decoded = decodeText(token.bytes, true);
+      const bytes = parser.readToken()!;
+      const decoded = decodeText(bytes, true);
       const parsed = JSON.parse(decoded);
       const encoded = encodeText(String(parsed));
 
       return encoded;
     }
 
-    const token = decoder.readToken()!;
-
-    return token.bytes;
+    return parser.readToken()!;
   }
 
   /**
@@ -225,24 +223,24 @@ class Value {
    * @param decoder The decoder positioned at the opening `{`.
    * @returns The canonicalized UTF-8 bytes of the object.
    */
-  #processObject(decoder: Decoder): Uint8Array {
-    decoder.readToken();
+  #processObject(parser: Parser): Uint8Array {
+    parser.readToken();
 
     const members: { name: string; key: Uint8Array; value: Uint8Array }[] = [];
 
-    while (decoder.peekKind() !== KIND.OBJECT_END) {
-      const token = decoder.readToken();
+    while (parser.peekKind() !== KIND.OBJECT_END) {
+      const bytes = parser.readToken();
 
-      if (token) {
-        const decoded = decodeText(token.bytes, true);
+      if (bytes) {
+        const decoded = decodeText(bytes, true);
         const parsed = JSON.parse(decoded);
-        const value = this.#processValue(decoder);
+        const value = this.#processValue(parser);
 
-        members.push({ name: parsed, key: token.bytes, value });
+        members.push({ name: parsed, key: bytes, value });
       }
     }
 
-    decoder.readToken();
+    parser.readToken();
 
     members.sort((a, b) => compareUTF16(a.name, b.name));
 
@@ -285,16 +283,16 @@ class Value {
    * @param decoder The decoder positioned at the opening `[`.
    * @returns The UTF-8 bytes of the re-serialized array.
    */
-  #processArray(decoder: Decoder): Uint8Array {
-    decoder.readToken();
+  #processArray(parser: Parser): Uint8Array {
+    parser.readToken();
 
     const items: Uint8Array[] = [];
 
-    while (decoder.peekKind() !== KIND.ARRAY_END) {
-      items.push(this.#processValue(decoder));
+    while (parser.peekKind() !== KIND.ARRAY_END) {
+      items.push(this.#processValue(parser));
     }
 
-    decoder.readToken();
+    parser.readToken();
 
     const OPEN = new Uint8Array([ASCII.OPENING_BRACKET]);
     const CLOSE = new Uint8Array([ASCII.CLOSING_BRACKET]);

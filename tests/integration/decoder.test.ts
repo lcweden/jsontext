@@ -375,7 +375,7 @@ Deno.test("[integration] JSONTextDecoder", async (test) => {
 
       decoder.end();
 
-      assertEquals(decoder.inputOffset(), 0);
+      assertEquals(decoder.inputOffset, 0);
     });
 
     await test.step("should advance after each token is read", () => {
@@ -386,11 +386,11 @@ Deno.test("[integration] JSONTextDecoder", async (test) => {
       decoder.end();
       decoder.readToken();
 
-      assertEquals(decoder.inputOffset(), 1);
+      assertEquals(decoder.inputOffset, 1);
 
       decoder.readToken();
 
-      assertEquals(decoder.inputOffset(), 2);
+      assertEquals(decoder.inputOffset, 2);
     });
   });
 
@@ -402,7 +402,7 @@ Deno.test("[integration] JSONTextDecoder", async (test) => {
 
       decoder.end();
 
-      assertEquals(decoder.unreadBytes(), encoded);
+      assertEquals(decoder.unreadBytes, encoded);
     });
 
     await test.step("should return remaining bytes after reading a token", () => {
@@ -413,7 +413,7 @@ Deno.test("[integration] JSONTextDecoder", async (test) => {
       decoder.end();
       decoder.readToken();
 
-      assertEquals(decoder.unreadBytes(), encodeText("1,2]"));
+      assertEquals(decoder.unreadBytes, encodeText("1,2]"));
     });
   });
 
@@ -450,7 +450,7 @@ Deno.test("[integration] JSONTextDecoder", async (test) => {
 
       assertEquals(error.offset, 0);
       assertEquals(error.pointer.toString(), "");
-      assertEquals(error.message, "invalid literal null at offset 0");
+      assertEquals(error.message, "Invalid literal null at offset 0");
     });
 
     await test.step("should include pointer path in SyntacticError within an object", () => {

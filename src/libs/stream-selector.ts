@@ -1,8 +1,8 @@
+import Value from "#src/api/value";
 import { DEFAULT_DECODER_OPTIONS, KIND, MAX_NESTING_DEPTH } from "#src/common/constants";
-import Decoder from "#src/modules/decoder";
+import Parser from "#src/modules/parser";
 import type { Matcher } from "#src/modules/path";
 import Path from "#src/modules/path";
-import Value from "#src/modules/value";
 import type { DecoderOptions } from "#src/types/options";
 import { encodeText } from "#src/utils/text";
 
@@ -44,7 +44,7 @@ type JSONTextSelectorStreamOptions = DecoderOptions & {
  * ```
  */
 class JSONTextSelectorStream extends TransformStream<Uint8Array, Value> {
-  #decoder: Decoder;
+  #parser: Parser;
   #matcher: Matcher;
   #indexes: Uint32Array;
   #types: Uint8Array;
@@ -63,20 +63,20 @@ class JSONTextSelectorStream extends TransformStream<Uint8Array, Value> {
     super(
       {
         transform: (chunk, controller) => {
-          this.#decoder.push(chunk);
+          this.#parser.push(chunk);
           this.#drain(controller);
         },
         flush: (controller) => {
-          this.#decoder.end();
+          this.#parser.close();
           this.#drain(controller);
-          this.#decoder.checkEOF();
+          this.#parser.checkEOF();
         },
       },
       writableStrategy,
       readableStrategy,
     );
 
-    this.#decoder = new Decoder(new Uint8Array(), decoderOptions);
+    this.#parser = new Parser(new Uint8Array(), decoderOptions);
     this.#matcher = new Path(encodeText(input)).createMatcher();
     this.#indexes = new Uint32Array(MAX_NESTING_DEPTH);
     this.#types = new Uint8Array(MAX_NESTING_DEPTH);
@@ -90,14 +90,14 @@ class JSONTextSelectorStream extends TransformStream<Uint8Array, Value> {
    */
   #drain(controller: TransformStreamDefaultController<Value>): void {
     while (true) {
-      const kind = this.#decoder.peekKind();
+      const kind = this.#parser.peekKind();
 
       if (kind === undefined) {
         break;
       }
 
       if (kind === KIND.OBJECT_END || kind === KIND.ARRAY_END) {
-        this.#decoder.readToken();
+        this.#parser.readToken();
 
         if (this.#depth > 0 && this.#pushs[this.#depth - 1] > 0) {
           this.#matcher.pop();
@@ -118,8 +118,8 @@ class JSONTextSelectorStream extends TransformStream<Uint8Array, Value> {
         continue;
       }
 
-      if (this.#decoder.needObjectName()) {
-        if (this.#decoder.readToken() === undefined) {
+      if (this.#parser.needObjectName) {
+        if (this.#parser.readToken() === undefined) {
           return;
         }
 
@@ -130,7 +130,7 @@ class JSONTextSelectorStream extends TransformStream<Uint8Array, Value> {
 
       if (this.#depth > 0) {
         const isObject = this.#types[this.#depth - 1] === 1;
-        const step = isObject ? this.#decoder.lastObjectName() : this.#indexes[this.#depth - 1];
+        const step = isObject ? this.#parser.lastObjectName : this.#indexes[this.#depth - 1];
 
         this.#matcher.push(step);
         pushed = true;
@@ -139,9 +139,9 @@ class JSONTextSelectorStream extends TransformStream<Uint8Array, Value> {
       const isContainer = kind === KIND.OBJECT_BEGIN || kind === KIND.ARRAY_BEGIN;
 
       if (this.#matcher.isAccepting()) {
-        const value = this.#decoder.readValue();
+        const bytes = this.#parser.readValue();
 
-        if (value === undefined) {
+        if (bytes === undefined) {
           if (pushed) {
             this.#matcher.pop();
           }
@@ -149,7 +149,7 @@ class JSONTextSelectorStream extends TransformStream<Uint8Array, Value> {
           return;
         }
 
-        controller.enqueue(new Value(value.bytes, this.#decoder.stackPointer(-1).toString()));
+        controller.enqueue(new Value(bytes, this.#parser.stackPointer(-1).toString()));
 
         if (pushed) {
           this.#matcher.pop();
@@ -167,7 +167,7 @@ class JSONTextSelectorStream extends TransformStream<Uint8Array, Value> {
       }
 
       if (!isContainer || this.#matcher.isDead()) {
-        if (!this.#decoder.skipValue()) {
+        if (!this.#parser.skipValue()) {
           if (pushed) {
             this.#matcher.pop();
           }
@@ -190,7 +190,7 @@ class JSONTextSelectorStream extends TransformStream<Uint8Array, Value> {
         continue;
       }
 
-      this.#decoder.readToken();
+      this.#parser.readToken();
       this.#types[this.#depth] = kind === KIND.OBJECT_BEGIN ? 1 : 0;
       this.#indexes[this.#depth] = 0;
       this.#pushs[this.#depth] = pushed ? 1 : 0;

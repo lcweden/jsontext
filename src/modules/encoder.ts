@@ -1,10 +1,10 @@
+import Token from "#src/api/token";
+import Value from "#src/api/value";
 import { ASCII, KIND, UNICODE } from "#src/common/constants";
 import { SyntacticError } from "#src/common/errors";
 import type Pointer from "#src/modules/pointer";
 import State from "#src/modules/state";
 import Tape from "#src/modules/tape";
-import Token from "#src/modules/token";
-import Value from "#src/modules/value";
 import type { Kind } from "#src/types/kind";
 import type { EncoderOptions } from "#src/types/options";
 import { decodeText, encodeText } from "#src/utils/text";
@@ -55,7 +55,7 @@ class Encoder {
    * @returns The current nesting depth — `1` at the top level, incremented by each open object or array.
    */
   depth(): number {
-    return this.#state.depth();
+    return this.#state.depth;
   }
 
   /**
@@ -110,7 +110,7 @@ class Encoder {
    */
   writeToken(token: Token): void {
     const length = this.#tape.length;
-    const delimiter = this.#state.needDelimiter(token.kind);
+    const delimiter = this.#state.requiredDelimiter(token.kind);
 
     try {
       if (delimiter === ":") {
@@ -139,7 +139,7 @@ class Encoder {
 
           this.#tape.appendBytes(bytes);
 
-          if (this.#state.needObjectName()) {
+          if (this.#state.needsObjectName) {
             const decoded = decodeText(bytes, !this.#options.allowInvalidUTF8);
             const parsed = JSON.parse(decoded);
 
@@ -211,7 +211,7 @@ class Encoder {
    */
   writeValue(value: Value): void {
     const length = this.#tape.length;
-    const delimiter = this.#state.needDelimiter(value.kind);
+    const delimiter = this.#state.requiredDelimiter(value.kind);
 
     try {
       if (delimiter === ":") {
@@ -243,7 +243,7 @@ class Encoder {
           this.#state.appendLiteral();
           break;
         case KIND.STRING: {
-          if (this.#state.needObjectName()) {
+          if (this.#state.needsObjectName) {
             const decoded = decodeText(bytes, !this.#options.allowInvalidUTF8);
             const parsed = JSON.parse(decoded);
 
@@ -296,7 +296,7 @@ class Encoder {
     }
 
     if (this.#options.multiline) {
-      const depth = this.#state.depth();
+      const depth = this.#state.depth;
 
       if (depth === 1) {
         return;
