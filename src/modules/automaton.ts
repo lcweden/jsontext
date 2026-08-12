@@ -20,6 +20,15 @@ class Automaton {
     this.#stack = [];
   }
 
+  /**
+   * Returns the current nesting depth of the structural state.
+   *
+   * @returns The current nesting depth — `1` at the top level, incremented by each open object or array.
+   */
+  get depth(): number {
+    return this.#stack.length + 1;
+  }
+
   /** The current entry at the deepest active parsing context. */
   get last(): Entry {
     return this.#last;
@@ -36,7 +45,7 @@ class Automaton {
    * @throws {SyntaxError} If the current entry requires an object name.
    */
   appendLiteral(): void {
-    if (this.#last.needObjectName()) {
+    if (this.#last.needsObjectName) {
       throw new SyntaxError("object name must be a string");
     }
 
@@ -63,15 +72,6 @@ class Automaton {
   }
 
   /**
-   * Returns the current nesting depth of the structural state.
-   *
-   * @returns The current nesting depth — `1` at the top level, incremented by each open object or array.
-   */
-  depth(): number {
-    return this.#stack.length + 1;
-  }
-
-  /**
    * Retrieves the structural entry at the specified depth index.
    *
    * @param index The index of the entry to retrieve.
@@ -92,7 +92,7 @@ class Automaton {
    * @throws {RangeError} If the maximum nesting depth is exceeded.
    */
   pushObject(): void {
-    if (this.#last.needObjectName()) {
+    if (this.#last.needsObjectName) {
       throw new SyntaxError("object name must be a string");
     }
 
@@ -112,11 +112,11 @@ class Automaton {
    * @throws {SyntaxError} If the current context is not an object, or if it is prematurely closed while expecting a value.
    */
   popObject(): void {
-    if (!this.#last.isObject()) {
+    if (!this.#last.isObject) {
       throw new SyntaxError("mismatching } for object");
     }
 
-    if (this.#last.needObjectValue()) {
+    if (this.#last.needsObjectValue) {
       throw new SyntaxError("missing value after object name");
     }
 
@@ -134,7 +134,7 @@ class Automaton {
    * @throws {RangeError} If the maximum nesting depth is exceeded.
    */
   pushArray(): void {
-    if (this.#last.needObjectName()) {
+    if (this.#last.needsObjectName) {
       throw new SyntaxError("object name must be a string");
     }
 
@@ -154,7 +154,7 @@ class Automaton {
    * @throws {SyntaxError} If the current context is not an array, or if it's the implicit top-level array being closed.
    */
   popArray(): void {
-    if (!this.#last.isArray() || this.#stack.length === 0) {
+    if (!this.#last.isArray || this.#stack.length === 0) {
       throw new SyntaxError("mismatching structural token for object or array");
     }
 
@@ -171,8 +171,8 @@ class Automaton {
    * @param kind The kind of the next incoming token.
    * @returns `":"` if a colon is needed, `","` if a comma is needed, or `null` if no delimiter is expected.
    */
-  needDelimiter(kind: Kind): ":" | "," | null {
-    if (this.#last.needImplicitColon()) {
+  requiredDelimiter(kind: Kind): ":" | "," | null {
+    if (this.#last.needsImplicitColon) {
       return ":";
     }
 

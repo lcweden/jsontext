@@ -28,6 +28,42 @@ class State {
   }
 
   /**
+   * Returns the current nesting depth of the structural state.
+   *
+   * @returns The current nesting depth — `1` at the top level, incremented by each open object or array.
+   */
+  get depth(): number {
+    return this.#automaton.depth;
+  }
+
+  /**
+   * Retrieves the name of the currently active object property.
+   *
+   * @returns The current object property name, or an empty string if not inside an object.
+   */
+  get lastObjectName(): string {
+    return this.#names.getLast();
+  }
+
+  /**
+   * Checks if the current context expects an object key.
+   *
+   * @returns `true` if the next token must be a string serving as an object name, `false` otherwise.
+   */
+  get needsObjectName(): boolean {
+    return this.#automaton.last.needsObjectName;
+  }
+
+  /**
+   * Checks if the current context expects an object value.
+   *
+   * @returns `true` if an object value is needed, `false` otherwise.
+   */
+  get needsObjectValue(): boolean {
+    return this.#automaton.last.needsObjectValue;
+  }
+
+  /**
    * Asserts and appends a generic literal value to the current context.
    *
    * @throws {SyntaxError} If the current entry requires an object name.
@@ -53,49 +89,13 @@ class State {
   }
 
   /**
-   * Returns the current nesting depth of the structural state.
-   *
-   * @returns The current nesting depth — `1` at the top level, incremented by each open object or array.
-   */
-  depth(): number {
-    return this.#automaton.depth();
-  }
-
-  /**
    * Determines if a delimiter (`:` or `,`) is required before the next token.
    *
    * @param kind The kind of the next incoming token.
    * @returns `":"` if a colon is needed, `","` if a comma is needed, or `null` if no delimiter is expected.
    */
-  needDelimiter(kind: Kind): ":" | "," | null {
-    return this.#automaton.needDelimiter(kind);
-  }
-
-  /**
-   * Checks if the current context expects an object key.
-   *
-   * @returns `true` if the next token must be a string serving as an object name, `false` otherwise.
-   */
-  needObjectName(): boolean {
-    return this.#automaton.last.needObjectName();
-  }
-
-  /**
-   * Checks if the current context expects an object value.
-   *
-   * @returns `true` if an object value is needed, `false` otherwise.
-   */
-  needObjectValue(): boolean {
-    return this.#automaton.last.needObjectValue();
-  }
-
-  /**
-   * Retrieves the name of the currently active object property.
-   *
-   * @returns The current object property name, or an empty string if not inside an object.
-   */
-  lastObjectName(): string {
-    return this.#names.getLast();
+  requiredDelimiter(kind: Kind): ":" | "," | null {
+    return this.#automaton.requiredDelimiter(kind);
   }
 
   /**
@@ -179,29 +179,29 @@ class State {
     const tokens: string[] = [];
     let depth = 0;
 
-    for (let index = 1; index < this.#automaton.depth(); index++) {
+    for (let index = 1; index < this.#automaton.depth; index++) {
       const entry = this.#automaton.getEntry(index);
       let delta = -1;
 
-      if (index === this.#automaton.depth() - 1) {
-        const isEmpty = where < 0 && entry.count() === 0;
-        const isNotInObject = where === 0 && !entry.needObjectValue();
-        const isExpectingName = where > 0 && entry.needObjectName();
+      if (index === this.#automaton.depth - 1) {
+        const isEmpty = where < 0 && entry.count === 0;
+        const isNotInObject = where === 0 && !entry.needsObjectValue;
+        const isExpectingName = where > 0 && entry.needsObjectName;
 
         if (isEmpty || isNotInObject || isExpectingName) {
           return new Pointer(tokens);
         }
 
-        if (where > 0 && entry.isArray()) {
+        if (where > 0 && entry.isArray) {
           delta = 0;
         }
       }
 
-      if (entry.isObject()) {
+      if (entry.isObject) {
         tokens.push(this.#names.getObjectName(depth));
         depth++;
       } else {
-        tokens.push(String(entry.count() + delta));
+        tokens.push(String(entry.count + delta));
       }
     }
 

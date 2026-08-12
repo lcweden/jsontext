@@ -13,19 +13,19 @@ Deno.test("[module] state", async (test) => {
     await test.step("should start at depth 1", () => {
       const state = new State({});
 
-      assertEquals(state.depth(), 1);
+      assertEquals(state.depth, 1);
     });
 
     await test.step("should not need object name initially", () => {
       const state = new State({});
 
-      assertEquals(state.needObjectName(), false);
+      assertEquals(state.needsObjectName, false);
     });
 
     await test.step("should not need object value initially", () => {
       const state = new State({});
 
-      assertEquals(state.needObjectValue(), false);
+      assertEquals(state.needsObjectValue, false);
     });
   });
 
@@ -68,7 +68,7 @@ Deno.test("[module] state", async (test) => {
       state.pushObject();
       state.appendString();
 
-      assertEquals(state.needObjectValue(), true);
+      assertEquals(state.needsObjectValue, true);
     });
 
     await test.step("should not throw when object value is expected", () => {
@@ -78,7 +78,7 @@ Deno.test("[module] state", async (test) => {
       state.appendString();
       state.appendString();
 
-      assertEquals(state.needObjectName(), true);
+      assertEquals(state.needsObjectName, true);
     });
   });
 
@@ -111,7 +111,7 @@ Deno.test("[module] state", async (test) => {
     await test.step("should return 1 initially", () => {
       const state = new State({});
 
-      assertEquals(state.depth(), 1);
+      assertEquals(state.depth, 1);
     });
 
     await test.step("should increase by 1 after pushArray", () => {
@@ -119,7 +119,7 @@ Deno.test("[module] state", async (test) => {
 
       state.pushArray();
 
-      assertEquals(state.depth(), 2);
+      assertEquals(state.depth, 2);
     });
 
     await test.step("should increase by 1 after pushObject", () => {
@@ -127,7 +127,7 @@ Deno.test("[module] state", async (test) => {
 
       state.pushObject();
 
-      assertEquals(state.depth(), 2);
+      assertEquals(state.depth, 2);
     });
 
     await test.step("should decrease by 1 after popArray", () => {
@@ -136,7 +136,7 @@ Deno.test("[module] state", async (test) => {
       state.pushArray();
       state.popArray();
 
-      assertEquals(state.depth(), 1);
+      assertEquals(state.depth, 1);
     });
 
     await test.step("should decrease by 1 after popObject", () => {
@@ -145,7 +145,7 @@ Deno.test("[module] state", async (test) => {
       state.pushObject();
       state.popObject();
 
-      assertEquals(state.depth(), 1);
+      assertEquals(state.depth, 1);
     });
 
     await test.step("should track multiple levels of nesting", () => {
@@ -154,15 +154,15 @@ Deno.test("[module] state", async (test) => {
       state.pushArray();
       state.pushObject();
 
-      assertEquals(state.depth(), 3);
+      assertEquals(state.depth, 3);
     });
   });
 
-  await test.step("[function] needDelimiter", async (test) => {
+  await test.step("[function] requiredDelimiter", async (test) => {
     await test.step("should return null initially", () => {
       const state = new State({});
 
-      assertEquals(state.needDelimiter(KIND.STRING), null);
+      assertEquals(state.requiredDelimiter(KIND.STRING), null);
     });
 
     await test.step("should return null for empty nested array", () => {
@@ -170,7 +170,7 @@ Deno.test("[module] state", async (test) => {
 
       state.pushArray();
 
-      assertEquals(state.needDelimiter(KIND.STRING), null);
+      assertEquals(state.requiredDelimiter(KIND.STRING), null);
     });
 
     await test.step("should return comma after first item in nested array", () => {
@@ -179,7 +179,7 @@ Deno.test("[module] state", async (test) => {
       state.pushArray();
       state.appendString();
 
-      assertEquals(state.needDelimiter(KIND.STRING), ",");
+      assertEquals(state.requiredDelimiter(KIND.STRING), ",");
     });
 
     await test.step("should return null before array end even with items", () => {
@@ -188,7 +188,7 @@ Deno.test("[module] state", async (test) => {
       state.pushArray();
       state.appendString();
 
-      assertEquals(state.needDelimiter(KIND.ARRAY_END), null);
+      assertEquals(state.requiredDelimiter(KIND.ARRAY_END), null);
     });
 
     await test.step("should return colon after object name", () => {
@@ -197,7 +197,7 @@ Deno.test("[module] state", async (test) => {
       state.pushObject();
       state.appendString();
 
-      assertEquals(state.needDelimiter(KIND.STRING), ":");
+      assertEquals(state.requiredDelimiter(KIND.STRING), ":");
     });
 
     await test.step("should return comma before second object name", () => {
@@ -207,7 +207,7 @@ Deno.test("[module] state", async (test) => {
       state.appendString();
       state.appendString();
 
-      assertEquals(state.needDelimiter(KIND.STRING), ",");
+      assertEquals(state.requiredDelimiter(KIND.STRING), ",");
     });
 
     await test.step("should return null before object end even with items", () => {
@@ -217,14 +217,14 @@ Deno.test("[module] state", async (test) => {
       state.appendString();
       state.appendString();
 
-      assertEquals(state.needDelimiter(KIND.OBJECT_END), null);
+      assertEquals(state.requiredDelimiter(KIND.OBJECT_END), null);
     });
 
     await test.step("should return null at root level even with items", () => {
       const state = new State({});
       state.appendString();
 
-      assertEquals(state.needDelimiter(KIND.STRING), null);
+      assertEquals(state.requiredDelimiter(KIND.STRING), null);
     });
   });
 
@@ -232,7 +232,7 @@ Deno.test("[module] state", async (test) => {
     await test.step("should return false in array context", () => {
       const state = new State({});
 
-      assertEquals(state.needObjectName(), false);
+      assertEquals(state.needsObjectName, false);
     });
 
     await test.step("should return true immediately after pushObject", () => {
@@ -240,7 +240,7 @@ Deno.test("[module] state", async (test) => {
 
       state.pushObject();
 
-      assertEquals(state.needObjectName(), true);
+      assertEquals(state.needsObjectName, true);
     });
 
     await test.step("should return false after appending object name", () => {
@@ -249,7 +249,7 @@ Deno.test("[module] state", async (test) => {
       state.pushObject();
       state.appendString();
 
-      assertEquals(state.needObjectName(), false);
+      assertEquals(state.needsObjectName, false);
     });
 
     await test.step("should return true again after appending object value", () => {
@@ -259,7 +259,7 @@ Deno.test("[module] state", async (test) => {
       state.appendString();
       state.appendString();
 
-      assertEquals(state.needObjectName(), true);
+      assertEquals(state.needsObjectName, true);
     });
   });
 
@@ -267,7 +267,7 @@ Deno.test("[module] state", async (test) => {
     await test.step("should return false in array context", () => {
       const state = new State({});
 
-      assertEquals(state.needObjectValue(), false);
+      assertEquals(state.needsObjectValue, false);
     });
 
     await test.step("should return false immediately after pushObject", () => {
@@ -275,7 +275,7 @@ Deno.test("[module] state", async (test) => {
 
       state.pushObject();
 
-      assertEquals(state.needObjectValue(), false);
+      assertEquals(state.needsObjectValue, false);
     });
 
     await test.step("should return true after appending object name", () => {
@@ -284,7 +284,7 @@ Deno.test("[module] state", async (test) => {
       state.pushObject();
       state.appendString();
 
-      assertEquals(state.needObjectValue(), true);
+      assertEquals(state.needsObjectValue, true);
     });
 
     await test.step("should return false after appending object value", () => {
@@ -294,7 +294,7 @@ Deno.test("[module] state", async (test) => {
       state.appendString();
       state.appendString();
 
-      assertEquals(state.needObjectValue(), false);
+      assertEquals(state.needsObjectValue, false);
     });
   });
 
@@ -339,7 +339,7 @@ Deno.test("[module] state", async (test) => {
       state.pushArray();
       state.popArray();
 
-      assertEquals(state.depth(), 1);
+      assertEquals(state.depth, 1);
     });
 
     await test.step("should throw at root level", () => {
@@ -399,7 +399,7 @@ Deno.test("[module] state", async (test) => {
       state.pushObject();
       state.popObject();
 
-      assertEquals(state.depth(), 1);
+      assertEquals(state.depth, 1);
     });
 
     await test.step("should throw when inside an array", () => {

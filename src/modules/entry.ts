@@ -27,7 +27,7 @@ class Entry {
    *
    * @returns The current element count.
    */
-  count(): number {
+  get count(): number {
     return this.#count;
   }
 
@@ -36,7 +36,7 @@ class Entry {
    *
    * @returns `true` if the entry is an object, `false` otherwise.
    */
-  isObject(): boolean {
+  get isObject(): boolean {
     return this.#type === "object";
   }
 
@@ -45,28 +45,8 @@ class Entry {
    *
    * @returns `true` if the entry is an array, `false` otherwise.
    */
-  isArray(): boolean {
+  get isArray(): boolean {
     return this.#type === "array";
-  }
-
-  /**
-   * Checks if the entry expects an object name for the next token.
-   * This is true when the structure is an object and the current count is even.
-   *
-   * @returns `true` if the next token must be a string serving as an object name, `false` otherwise.
-   */
-  needObjectName(): boolean {
-    return this.isObject() && this.#count % 2 === 0;
-  }
-
-  /**
-   * Checks if the entry expects an object value for the next token.
-   * This is true when the structure is an object and a key has just been processed (count is odd).
-   *
-   * @returns `true` if an object value is needed, `false` otherwise.
-   */
-  needObjectValue(): boolean {
-    return this.isObject() && this.#count % 2 === 1;
   }
 
   /**
@@ -75,8 +55,28 @@ class Entry {
    *
    * @returns `true` if the entry needs an implicit colon, `false` otherwise.
    */
-  needImplicitColon(): boolean {
-    return this.needObjectValue();
+  get needsImplicitColon(): boolean {
+    return this.needsObjectValue;
+  }
+
+  /**
+   * Checks if the entry expects an object name for the next token.
+   * This is true when the structure is an object and the current count is even.
+   *
+   * @returns `true` if the next token must be a string serving as an object name, `false` otherwise.
+   */
+  get needsObjectName(): boolean {
+    return this.isObject && this.#count % 2 === 0;
+  }
+
+  /**
+   * Checks if the entry expects an object value for the next token.
+   * This is true when the structure is an object and a key has just been processed (count is odd).
+   *
+   * @returns `true` if an object value is needed, `false` otherwise.
+   */
+  get needsObjectValue(): boolean {
+    return this.isObject && this.#count % 2 === 1;
   }
 
   /**
@@ -92,10 +92,10 @@ class Entry {
    * @returns `true` if the entry needs an implicit comma, `false` otherwise.
    */
   needImplicitComma(next: Kind): boolean {
-    const isObjectEnd = this.isObject() && next === KIND.OBJECT_END;
-    const isArrayEnd = this.isArray() && next === KIND.ARRAY_END;
+    const isObjectEnd = this.isObject && next === KIND.OBJECT_END;
+    const isArrayEnd = this.isArray && next === KIND.ARRAY_END;
 
-    return (!!this.count() && !this.needObjectValue() && !isObjectEnd && !isArrayEnd);
+    return (!!this.count && !this.needsObjectValue && !isObjectEnd && !isArrayEnd);
   }
 
   /**
