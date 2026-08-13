@@ -22,6 +22,16 @@ class Tape {
     return this.#length;
   }
 
+  /** The underlying byte buffer, including any unwritten capacity. */
+  get bytes(): Uint8Array {
+    return this.#bytes.subarray(0, this.#length);
+  }
+
+  /** The absolute offset of the first byte in the buffer, relative to the start of the stream. */
+  get outputOffset(): number {
+    return this.#baseOffset + this.#length;
+  }
+
   /**
    * Appends a single byte (0-255) to the buffer.
    * Doubles the underlying capacity if the buffer is full.
@@ -51,25 +61,6 @@ class Tape {
 
     this.#bytes.set(bytes, this.#length);
     this.#length += bytes.length;
-  }
-
-  /**
-   * Returns a view of the currently written bytes without advancing the output offset.
-   *
-   * @returns A subarray of the written bytes.
-   */
-  bytes(): Uint8Array {
-    return this.#bytes.subarray(0, this.#length);
-  }
-
-  /**
-   * Returns the absolute output byte offset, accumulating across all
-   * {@link takeBytes} calls since the last {@link reset}.
-   *
-   * @returns The absolute output byte offset.
-   */
-  outputOffset(): number {
-    return this.#baseOffset + this.#length;
   }
 
   /**

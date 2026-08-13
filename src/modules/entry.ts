@@ -20,61 +20,32 @@ class Entry {
     this.#count = 0;
   }
 
-  /**
-   * Returns the current count of elements in the entry.
-   * - **Array**: the index of the next element.
-   * - **Object**: the number of key-value half-steps processed.
-   *
-   * @returns The current element count.
-   */
+  /** The number of elements processed in this entry. */
   get count(): number {
     return this.#count;
   }
 
-  /**
-   * Checks if the entry represents a JSON object.
-   *
-   * @returns `true` if the entry is an object, `false` otherwise.
-   */
+  /** Checks if the entry represents a JSON object. */
   get isObject(): boolean {
     return this.#type === "object";
   }
 
-  /**
-   * Checks if the entry represents a JSON array.
-   *
-   * @returns `true` if the entry is an array, `false` otherwise.
-   */
+  /** Checks if the entry represents a JSON array. */
   get isArray(): boolean {
     return this.#type === "array";
   }
 
-  /**
-   * Checks if the entry needs an implicit colon before the next element,
-   * if it's an object expecting a value, the next token must be a colon (`:`).
-   *
-   * @returns `true` if the entry needs an implicit colon, `false` otherwise.
-   */
+  /** Checks if the entry expects an implicit colon before the next element. */
   get needsImplicitColon(): boolean {
     return this.needsObjectValue;
   }
 
-  /**
-   * Checks if the entry expects an object name for the next token.
-   * This is true when the structure is an object and the current count is even.
-   *
-   * @returns `true` if the next token must be a string serving as an object name, `false` otherwise.
-   */
+  /** Checks if the entry expects an object name for the next token. */
   get needsObjectName(): boolean {
     return this.isObject && this.#count % 2 === 0;
   }
 
-  /**
-   * Checks if the entry expects an object value for the next token.
-   * This is true when the structure is an object and a key has just been processed (count is odd).
-   *
-   * @returns `true` if an object value is needed, `false` otherwise.
-   */
+  /** Checks if the entry expects an object value for the next token. */
   get needsObjectValue(): boolean {
     return this.isObject && this.#count % 2 === 1;
   }

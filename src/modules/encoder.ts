@@ -46,7 +46,7 @@ class Encoder {
    * @returns A subarray of the internal tape buffer.
    */
   bytes(): Uint8Array {
-    return this.#tape.bytes();
+    return this.#tape.bytes;
   }
 
   /**
@@ -65,7 +65,7 @@ class Encoder {
    * @returns The absolute output byte offset.
    */
   outputOffset(): number {
-    return this.#tape.outputOffset();
+    return this.#tape.outputOffset;
   }
 
   /**
@@ -190,7 +190,7 @@ class Encoder {
 
       if (error instanceof SyntaxError) {
         const pointer = this.#state.stackPointer(1).toString();
-        const offset = this.#tape.outputOffset();
+        const offset = this.#tape.outputOffset;
 
         throw new SyntacticError(error.message, pointer, offset);
       }
@@ -273,7 +273,7 @@ class Encoder {
 
       if (error instanceof SyntaxError) {
         const pointer = this.#state.stackPointer(1).toString();
-        const offset = this.#tape.outputOffset();
+        const offset = this.#tape.outputOffset;
 
         throw new SyntacticError(error.message, pointer, offset);
       }

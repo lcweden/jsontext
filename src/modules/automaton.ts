@@ -20,11 +20,7 @@ class Automaton {
     this.#stack = [];
   }
 
-  /**
-   * Returns the current nesting depth of the structural state.
-   *
-   * @returns The current nesting depth — `1` at the top level, incremented by each open object or array.
-   */
+  /** The current structural nesting depth. */
   get depth(): number {
     return this.#stack.length + 1;
   }

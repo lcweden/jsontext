@@ -27,38 +27,22 @@ class State {
     this.#options = options;
   }
 
-  /**
-   * Returns the current nesting depth of the structural state.
-   *
-   * @returns The current nesting depth — `1` at the top level, incremented by each open object or array.
-   */
+  /** The current structural nesting depth. */
   get depth(): number {
     return this.#automaton.depth;
   }
 
-  /**
-   * Retrieves the name of the currently active object property.
-   *
-   * @returns The current object property name, or an empty string if not inside an object.
-   */
+  /** The last object name processed in the current context. */
   get lastObjectName(): string {
     return this.#names.getLast();
   }
 
-  /**
-   * Checks if the current context expects an object key.
-   *
-   * @returns `true` if the next token must be a string serving as an object name, `false` otherwise.
-   */
+  /** Checks if the current context expects an object name. */
   get needsObjectName(): boolean {
     return this.#automaton.last.needsObjectName;
   }
 
-  /**
-   * Checks if the current context expects an object value.
-   *
-   * @returns `true` if an object value is needed, `false` otherwise.
-   */
+  /** Checks if the current context expects an object value. */
   get needsObjectValue(): boolean {
     return this.#automaton.last.needsObjectValue;
   }
