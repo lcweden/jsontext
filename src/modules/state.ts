@@ -2,7 +2,12 @@ import Automaton from "#src/modules/automaton";
 import Pointer from "#src/modules/pointer";
 import { ObjectNamespaceStack, ObjectNameStack } from "#src/modules/stack";
 import type { Kind } from "#src/types/kind";
-import type { BaseOptions } from "#src/types/options";
+
+/** Options for {@link State}. */
+type StateOptions = {
+  /** Allow duplicate object key names. By default, duplicate names throw a `SyntacticError`. */
+  allowDuplicateNames: boolean;
+};
 
 /**
  * The central coordinator for the decoding/encoding state.
@@ -13,14 +18,14 @@ class State {
   #automaton: Automaton;
   #names: ObjectNameStack;
   #namespaces: ObjectNamespaceStack;
-  #options: BaseOptions;
+  #options: StateOptions;
 
   /**
    * Creates a new State coordinator.
    *
    * @param options Decoder/encoder configuration options.
    */
-  constructor(options: BaseOptions) {
+  constructor(options: StateOptions) {
     this.#automaton = new Automaton();
     this.#names = new ObjectNameStack();
     this.#namespaces = new ObjectNamespaceStack();
@@ -194,3 +199,4 @@ class State {
 }
 
 export default State;
+export type { StateOptions };

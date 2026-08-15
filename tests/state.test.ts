@@ -5,25 +5,25 @@ import { assertEquals, assertExists, assertThrows } from "#std/assert";
 Deno.test("[module] state", async (test) => {
   await test.step("[function] constructor", async (test) => {
     await test.step("should initialize state with default options", () => {
-      const state = new State({});
+      const state = new State({ allowDuplicateNames: false });
 
       assertExists(state);
     });
 
     await test.step("should start at depth 1", () => {
-      const state = new State({});
+      const state = new State({ allowDuplicateNames: false });
 
       assertEquals(state.depth, 1);
     });
 
     await test.step("should not need object name initially", () => {
-      const state = new State({});
+      const state = new State({ allowDuplicateNames: false });
 
       assertEquals(state.needsObjectName, false);
     });
 
     await test.step("should not need object value initially", () => {
-      const state = new State({});
+      const state = new State({ allowDuplicateNames: false });
 
       assertEquals(state.needsObjectValue, false);
     });
@@ -31,14 +31,14 @@ Deno.test("[module] state", async (test) => {
 
   await test.step("[function] appendLiteral", async (test) => {
     await test.step("should not throw in array context", () => {
-      const state = new State({});
+      const state = new State({ allowDuplicateNames: false });
 
       state.pushArray();
       state.appendLiteral();
     });
 
     await test.step("should not throw when appending object value", () => {
-      const state = new State({});
+      const state = new State({ allowDuplicateNames: false });
 
       state.pushObject();
       state.appendString();
@@ -46,7 +46,7 @@ Deno.test("[module] state", async (test) => {
     });
 
     await test.step("should throw when object name is expected", () => {
-      const state = new State({});
+      const state = new State({ allowDuplicateNames: false });
 
       state.pushObject();
 
@@ -56,14 +56,14 @@ Deno.test("[module] state", async (test) => {
 
   await test.step("[function] appendString", async (test) => {
     await test.step("should not throw in array context", () => {
-      const state = new State({});
+      const state = new State({ allowDuplicateNames: false });
 
       state.pushArray();
       state.appendString();
     });
 
     await test.step("should not throw when object name is expected", () => {
-      const state = new State({});
+      const state = new State({ allowDuplicateNames: false });
 
       state.pushObject();
       state.appendString();
@@ -72,7 +72,7 @@ Deno.test("[module] state", async (test) => {
     });
 
     await test.step("should not throw when object value is expected", () => {
-      const state = new State({});
+      const state = new State({ allowDuplicateNames: false });
 
       state.pushObject();
       state.appendString();
@@ -84,14 +84,14 @@ Deno.test("[module] state", async (test) => {
 
   await test.step("[function] appendNumber", async (test) => {
     await test.step("should not throw in array context", () => {
-      const state = new State({});
+      const state = new State({ allowDuplicateNames: false });
 
       state.pushArray();
       state.appendNumber();
     });
 
     await test.step("should not throw when appending object value", () => {
-      const state = new State({});
+      const state = new State({ allowDuplicateNames: false });
 
       state.pushObject();
       state.appendString();
@@ -99,7 +99,7 @@ Deno.test("[module] state", async (test) => {
     });
 
     await test.step("should throw when object name is expected", () => {
-      const state = new State({});
+      const state = new State({ allowDuplicateNames: false });
 
       state.pushObject();
 
@@ -109,13 +109,13 @@ Deno.test("[module] state", async (test) => {
 
   await test.step("[function] depth", async (test) => {
     await test.step("should return 1 initially", () => {
-      const state = new State({});
+      const state = new State({ allowDuplicateNames: false });
 
       assertEquals(state.depth, 1);
     });
 
     await test.step("should increase by 1 after pushArray", () => {
-      const state = new State({});
+      const state = new State({ allowDuplicateNames: false });
 
       state.pushArray();
 
@@ -123,7 +123,7 @@ Deno.test("[module] state", async (test) => {
     });
 
     await test.step("should increase by 1 after pushObject", () => {
-      const state = new State({});
+      const state = new State({ allowDuplicateNames: false });
 
       state.pushObject();
 
@@ -131,7 +131,7 @@ Deno.test("[module] state", async (test) => {
     });
 
     await test.step("should decrease by 1 after popArray", () => {
-      const state = new State({});
+      const state = new State({ allowDuplicateNames: false });
 
       state.pushArray();
       state.popArray();
@@ -140,7 +140,7 @@ Deno.test("[module] state", async (test) => {
     });
 
     await test.step("should decrease by 1 after popObject", () => {
-      const state = new State({});
+      const state = new State({ allowDuplicateNames: false });
 
       state.pushObject();
       state.popObject();
@@ -149,7 +149,7 @@ Deno.test("[module] state", async (test) => {
     });
 
     await test.step("should track multiple levels of nesting", () => {
-      const state = new State({});
+      const state = new State({ allowDuplicateNames: false });
 
       state.pushArray();
       state.pushObject();
@@ -160,13 +160,13 @@ Deno.test("[module] state", async (test) => {
 
   await test.step("[function] requiredDelimiter", async (test) => {
     await test.step("should return null initially", () => {
-      const state = new State({});
+      const state = new State({ allowDuplicateNames: false });
 
       assertEquals(state.requiredDelimiter(KIND.STRING), null);
     });
 
     await test.step("should return null for empty nested array", () => {
-      const state = new State({});
+      const state = new State({ allowDuplicateNames: false });
 
       state.pushArray();
 
@@ -174,7 +174,7 @@ Deno.test("[module] state", async (test) => {
     });
 
     await test.step("should return comma after first item in nested array", () => {
-      const state = new State({});
+      const state = new State({ allowDuplicateNames: false });
 
       state.pushArray();
       state.appendString();
@@ -183,7 +183,7 @@ Deno.test("[module] state", async (test) => {
     });
 
     await test.step("should return null before array end even with items", () => {
-      const state = new State({});
+      const state = new State({ allowDuplicateNames: false });
 
       state.pushArray();
       state.appendString();
@@ -192,7 +192,7 @@ Deno.test("[module] state", async (test) => {
     });
 
     await test.step("should return colon after object name", () => {
-      const state = new State({});
+      const state = new State({ allowDuplicateNames: false });
 
       state.pushObject();
       state.appendString();
@@ -201,7 +201,7 @@ Deno.test("[module] state", async (test) => {
     });
 
     await test.step("should return comma before second object name", () => {
-      const state = new State({});
+      const state = new State({ allowDuplicateNames: false });
 
       state.pushObject();
       state.appendString();
@@ -211,7 +211,7 @@ Deno.test("[module] state", async (test) => {
     });
 
     await test.step("should return null before object end even with items", () => {
-      const state = new State({});
+      const state = new State({ allowDuplicateNames: false });
 
       state.pushObject();
       state.appendString();
@@ -221,7 +221,7 @@ Deno.test("[module] state", async (test) => {
     });
 
     await test.step("should return null at root level even with items", () => {
-      const state = new State({});
+      const state = new State({ allowDuplicateNames: false });
       state.appendString();
 
       assertEquals(state.requiredDelimiter(KIND.STRING), null);
@@ -230,13 +230,13 @@ Deno.test("[module] state", async (test) => {
 
   await test.step("[function] needObjectName", async (test) => {
     await test.step("should return false in array context", () => {
-      const state = new State({});
+      const state = new State({ allowDuplicateNames: false });
 
       assertEquals(state.needsObjectName, false);
     });
 
     await test.step("should return true immediately after pushObject", () => {
-      const state = new State({});
+      const state = new State({ allowDuplicateNames: false });
 
       state.pushObject();
 
@@ -244,7 +244,7 @@ Deno.test("[module] state", async (test) => {
     });
 
     await test.step("should return false after appending object name", () => {
-      const state = new State({});
+      const state = new State({ allowDuplicateNames: false });
 
       state.pushObject();
       state.appendString();
@@ -253,7 +253,7 @@ Deno.test("[module] state", async (test) => {
     });
 
     await test.step("should return true again after appending object value", () => {
-      const state = new State({});
+      const state = new State({ allowDuplicateNames: false });
 
       state.pushObject();
       state.appendString();
@@ -265,13 +265,13 @@ Deno.test("[module] state", async (test) => {
 
   await test.step("[function] needObjectValue", async (test) => {
     await test.step("should return false in array context", () => {
-      const state = new State({});
+      const state = new State({ allowDuplicateNames: false });
 
       assertEquals(state.needsObjectValue, false);
     });
 
     await test.step("should return false immediately after pushObject", () => {
-      const state = new State({});
+      const state = new State({ allowDuplicateNames: false });
 
       state.pushObject();
 
@@ -279,7 +279,7 @@ Deno.test("[module] state", async (test) => {
     });
 
     await test.step("should return true after appending object name", () => {
-      const state = new State({});
+      const state = new State({ allowDuplicateNames: false });
 
       state.pushObject();
       state.appendString();
@@ -288,7 +288,7 @@ Deno.test("[module] state", async (test) => {
     });
 
     await test.step("should return false after appending object value", () => {
-      const state = new State({});
+      const state = new State({ allowDuplicateNames: false });
 
       state.pushObject();
       state.appendString();
@@ -300,13 +300,13 @@ Deno.test("[module] state", async (test) => {
 
   await test.step("[function] pushArray", async (test) => {
     await test.step("should not throw in array context", () => {
-      const state = new State({});
+      const state = new State({ allowDuplicateNames: false });
 
       state.pushArray();
     });
 
     await test.step("should not throw when object value is expected", () => {
-      const state = new State({});
+      const state = new State({ allowDuplicateNames: false });
 
       state.pushObject();
       state.appendString();
@@ -314,7 +314,7 @@ Deno.test("[module] state", async (test) => {
     });
 
     await test.step("should throw when object name is expected", () => {
-      const state = new State({});
+      const state = new State({ allowDuplicateNames: false });
 
       state.pushObject();
 
@@ -322,7 +322,7 @@ Deno.test("[module] state", async (test) => {
     });
 
     await test.step("should throw when max nesting depth is exceeded", () => {
-      const state = new State({});
+      const state = new State({ allowDuplicateNames: false });
 
       for (let i = 0; i < MAX_NESTING_DEPTH; i++) {
         state.pushArray();
@@ -334,7 +334,7 @@ Deno.test("[module] state", async (test) => {
 
   await test.step("[function] popArray", async (test) => {
     await test.step("should restore depth after pushArray", () => {
-      const state = new State({});
+      const state = new State({ allowDuplicateNames: false });
 
       state.pushArray();
       state.popArray();
@@ -343,13 +343,13 @@ Deno.test("[module] state", async (test) => {
     });
 
     await test.step("should throw at root level", () => {
-      const state = new State({});
+      const state = new State({ allowDuplicateNames: false });
 
       assertThrows(() => state.popArray(), SyntaxError);
     });
 
     await test.step("should throw when inside an object", () => {
-      const state = new State({});
+      const state = new State({ allowDuplicateNames: false });
 
       state.pushObject();
 
@@ -359,13 +359,13 @@ Deno.test("[module] state", async (test) => {
 
   await test.step("[function] pushObject", async (test) => {
     await test.step("should not throw in array context", () => {
-      const state = new State({});
+      const state = new State({ allowDuplicateNames: false });
 
       state.pushObject();
     });
 
     await test.step("should not throw when object value is expected", () => {
-      const state = new State({});
+      const state = new State({ allowDuplicateNames: false });
 
       state.pushObject();
       state.appendString();
@@ -374,7 +374,7 @@ Deno.test("[module] state", async (test) => {
     });
 
     await test.step("should throw when object name is expected", () => {
-      const state = new State({});
+      const state = new State({ allowDuplicateNames: false });
 
       state.pushObject();
 
@@ -382,7 +382,7 @@ Deno.test("[module] state", async (test) => {
     });
 
     await test.step("should throw when max nesting depth is exceeded", () => {
-      const state = new State({});
+      const state = new State({ allowDuplicateNames: false });
 
       for (let i = 0; i < MAX_NESTING_DEPTH; i++) {
         state.pushArray();
@@ -394,7 +394,7 @@ Deno.test("[module] state", async (test) => {
 
   await test.step("[function] popObject", async (test) => {
     await test.step("should restore depth after pushObject", () => {
-      const state = new State({});
+      const state = new State({ allowDuplicateNames: false });
 
       state.pushObject();
       state.popObject();
@@ -403,7 +403,7 @@ Deno.test("[module] state", async (test) => {
     });
 
     await test.step("should throw when inside an array", () => {
-      const state = new State({});
+      const state = new State({ allowDuplicateNames: false });
 
       state.pushArray();
 
@@ -411,13 +411,13 @@ Deno.test("[module] state", async (test) => {
     });
 
     await test.step("should throw at root level", () => {
-      const state = new State({});
+      const state = new State({ allowDuplicateNames: false });
 
       assertThrows(() => state.popObject(), SyntaxError, "mismatching } for object");
     });
 
     await test.step("should throw when object value is pending", () => {
-      const state = new State({});
+      const state = new State({ allowDuplicateNames: false });
 
       state.pushObject();
       state.appendString();
@@ -428,14 +428,14 @@ Deno.test("[module] state", async (test) => {
 
   await test.step("[function] setLast", async (test) => {
     await test.step("should not throw for a unique name", () => {
-      const state = new State({});
+      const state = new State({ allowDuplicateNames: false });
 
       state.pushObject();
       state.setLast("key");
     });
 
     await test.step("should throw for a duplicate name in the same object", () => {
-      const state = new State({});
+      const state = new State({ allowDuplicateNames: false });
 
       state.pushObject();
       state.setLast("key");
@@ -456,7 +456,7 @@ Deno.test("[module] state", async (test) => {
     });
 
     await test.step("should allow same name in different nested objects", () => {
-      const state = new State({});
+      const state = new State({ allowDuplicateNames: false });
 
       state.pushObject();
       state.setLast("key");
@@ -470,7 +470,7 @@ Deno.test("[module] state", async (test) => {
 
   await test.step("[function] stackPointer", async (test) => {
     await test.step("should return empty pointer at root level", () => {
-      const state = new State({});
+      const state = new State({ allowDuplicateNames: false });
 
       assertEquals(state.stackPointer(-1).toString(), "");
       assertEquals(state.stackPointer(0).toString(), "");
@@ -478,7 +478,7 @@ Deno.test("[module] state", async (test) => {
     });
 
     await test.step("should return empty pointer for empty nested array", () => {
-      const state = new State({});
+      const state = new State({ allowDuplicateNames: false });
 
       state.pushArray();
 
@@ -487,7 +487,7 @@ Deno.test("[module] state", async (test) => {
     });
 
     await test.step("should return next index for empty nested array", () => {
-      const state = new State({});
+      const state = new State({ allowDuplicateNames: false });
 
       state.pushArray();
 
@@ -495,7 +495,7 @@ Deno.test("[module] state", async (test) => {
     });
 
     await test.step("should point to last written index in array", () => {
-      const state = new State({});
+      const state = new State({ allowDuplicateNames: false });
 
       state.pushArray();
       state.appendString();
@@ -505,7 +505,7 @@ Deno.test("[module] state", async (test) => {
     });
 
     await test.step("should point to key when object value is expected", () => {
-      const state = new State({});
+      const state = new State({ allowDuplicateNames: false });
 
       state.pushObject();
       state.setLast("key");
@@ -517,7 +517,7 @@ Deno.test("[module] state", async (test) => {
     });
 
     await test.step("should return empty pointer after completing object pair", () => {
-      const state = new State({});
+      const state = new State({ allowDuplicateNames: false });
 
       state.pushObject();
       state.setLast("key");
@@ -529,7 +529,7 @@ Deno.test("[module] state", async (test) => {
     });
 
     await test.step("should escape special characters in key names", () => {
-      const state = new State({});
+      const state = new State({ allowDuplicateNames: false });
 
       state.pushObject();
       state.setLast("a/b~c");
@@ -539,7 +539,7 @@ Deno.test("[module] state", async (test) => {
     });
 
     await test.step("should build pointer across nested structures", () => {
-      const state = new State({});
+      const state = new State({ allowDuplicateNames: false });
 
       state.pushObject();
       state.setLast("a");

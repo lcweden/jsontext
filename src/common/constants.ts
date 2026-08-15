@@ -85,6 +85,8 @@ const DEFAULT_DECODER_OPTIONS = {
 
 /** Default option values for encoding. */
 const DEFAULT_ENCODER_OPTIONS = {
+  allowInvalidUTF8: false,
+  allowDuplicateNames: false,
   escapeForHTML: false,
   escapeForJS: false,
   canonicalizeRawNumbers: false,

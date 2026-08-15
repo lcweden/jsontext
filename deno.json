@@ -21,38 +21,15 @@
   },
   "lint": {
     "rules": {
-      "tags": [
-        "recommended"
-      ],
-      "include": [
-        "no-slow-types"
-      ],
-      "exclude": [
-        "no-sloppy-imports"
-      ]
+      "tags": ["recommended"],
+      "include": ["no-slow-types"],
+      "exclude": ["no-sloppy-imports"]
     }
   },
-  "unstable": [
-    "sloppy-imports"
-  ],
-  "exclude": [
-    "node_modules/",
-    "public/",
-    "dist/"
-  ],
+  "unstable": ["sloppy-imports"],
+  "exclude": ["node_modules/", "public/", "dist/"],
   "publish": {
-    "include": [
-      "src/",
-      "README.md",
-      "LICENSE",
-      "deno.json"
-    ],
-    "exclude": [
-      "tests/",
-      ".github/",
-      ".vscode/",
-      "dist/",
-      "public/"
-    ]
+    "include": ["src/", "README.md", "LICENSE", "deno.json"],
+    "exclude": ["tests/", ".github/", ".vscode/", "dist/", "public/"]
   }
 }

@@ -122,7 +122,7 @@ Deno.test("[integration] JSONTextEncoder", async (test) => {
     await test.step("should return 0 before any writes", () => {
       const encoder = new JSONTextEncoder();
 
-      assertEquals(encoder.outputOffset(), 0);
+      assertEquals(encoder.outputOffset, 0);
     });
 
     await test.step("should advance after each token is written", () => {
@@ -130,10 +130,10 @@ Deno.test("[integration] JSONTextEncoder", async (test) => {
 
       encoder.writeToken(Token.fromText("["));
 
-      assertEquals(encoder.outputOffset(), 1);
+      assertEquals(encoder.outputOffset, 1);
       encoder.writeToken(Token.fromNumber(1));
 
-      assertEquals(encoder.outputOffset(), 2);
+      assertEquals(encoder.outputOffset, 2);
     });
   });
 

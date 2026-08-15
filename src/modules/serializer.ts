@@ -1,84 +1,78 @@
 import Token from "#src/api/token";
 import Value from "#src/api/value";
-import { ASCII, KIND, UNICODE } from "#src/common/constants";
+import { ASCII, KIND } from "#src/common/constants";
 import { SyntacticError } from "#src/common/errors";
+import Escaper from "#src/modules/escaper";
+import Formatter from "#src/modules/formatter";
 import type Pointer from "#src/modules/pointer";
 import State from "#src/modules/state";
 import Tape from "#src/modules/tape";
-import type { Kind } from "#src/types/kind";
-import type { EncoderOptions } from "#src/types/options";
-import { decodeText, encodeText } from "#src/utils/text";
+import { decodeText } from "#src/utils/text";
+
+/** Options for {@link Serializer}. */
+type SerializerOptions = {
+  /** Allow duplicate object key names. By default, duplicate names throw a `SyntacticError`. */
+  allowDuplicateNames: boolean;
+  /** Allow invalid UTF-8 byte sequences. By default, invalid sequences throw a `TypeError`. */
+  allowInvalidUTF8: boolean;
+  /** Normalize number tokens to their canonical decimal form. */
+  canonicalizeRawNumbers: boolean;
+  /** Escape `<`, `>`, and `&` for safe embedding in HTML. */
+  escapeForHTML: boolean;
+  /** Escape `\u2028` and `\u2029` for safe embedding in JavaScript string literals. */
+  escapeForJS: boolean;
+  /** Indentation string used per nesting level when multiline is enabled. Defaults to two spaces. */
+  indent: string;
+  /** Prefix prepended to every indented line when multiline is enabled. */
+  indentPrefix: string;
+  /** Emit each value on its own line with indentation. */
+  multiline: boolean;
+  /** Emit a space after each `:` separator in objects. */
+  spaceAfterColon: boolean;
+  /** Emit a space after each `,` separator in arrays and objects. */
+  spaceAfterComma: boolean;
+};
 
 /**
- * Low-level JSON encoder that serializes tokens and values onto an internal
+ * Low-level JSON serializer that writes tokens and values onto an internal
  * {@link Tape}, enforcing RFC 8259 structural rules and applying optional
- * formatting (indentation, HTML escaping, etc.).
+ * formatting and escaping.
  *
  * @internal
  */
-class Encoder {
-  #tape: Tape;
+class Serializer {
+  #escaper: Escaper;
+  #formatter: Formatter;
+  #options: SerializerOptions;
   #state: State;
-  #options: EncoderOptions;
-  #cache: Record<string, Uint8Array | null>;
+  #tape: Tape;
 
   /**
-   * Creates a new Encoder with the given options.
+   * Creates a new Serializer instance with the given options.
    *
-   * @param options Encoder configuration options.
+   * @param options Serializer configuration options.
    */
-  constructor(options: EncoderOptions) {
-    this.#tape = new Tape();
-    this.#state = new State(options);
+  constructor(options: SerializerOptions) {
+    this.#escaper = new Escaper(options);
+    this.#formatter = new Formatter(options);
     this.#options = options;
-    this.#cache = {
-      "null_bytes": encodeText("null"),
-      "true_bytes": encodeText("true"),
-      "false_bytes": encodeText("false"),
-      "indent_bytes": encodeText(options.indent ?? "\t"),
-      "indent_prefix_bytes": options.indentPrefix ? encodeText(options.indentPrefix) : null,
-    };
+    this.#state = new State(options);
+    this.#tape = new Tape();
   }
 
-  /**
-   * Returns a view of the bytes written so far without advancing the output offset.
-   *
-   * @returns A subarray of the internal tape buffer.
-   */
-  bytes(): Uint8Array {
-    return this.#tape.bytes;
-  }
-
-  /**
-   * Returns the current structural nesting depth.
-   *
-   * @returns The current nesting depth — `1` at the top level, incremented by each open object or array.
-   */
-  depth(): number {
+  /** The current structural nesting depth. */
+  get depth(): number {
     return this.#state.depth;
   }
 
-  /**
-   * Returns the absolute output byte offset, accumulating across all
-   * {@link takeBytes} calls since the last {@link reset}.
-   *
-   * @returns The absolute output byte offset.
-   */
-  outputOffset(): number {
+  /** The absolute output byte offset accumulated across all {@link takeBytes} calls since creation. */
+  get outputOffset(): number {
     return this.#tape.outputOffset;
   }
 
   /**
-   * Clears the tape and reinitializes the structural state.
-   */
-  reset(): void {
-    this.#tape.reset();
-    this.#state = new State(this.#options);
-  }
-
-  /**
    * Generates a JSON Pointer representing a location relative to the current
-   * encoding position.
+   * serialization position.
    *
    * @param where `-1` for the previously processed value, `0` for the current scope, `1` for the next value.
    * @returns A {@link Pointer} representing the absolute path.
@@ -119,23 +113,25 @@ class Encoder {
         this.#tape.appendByte(ASCII.COMMA);
       }
 
-      this.#appendWhitespace(token.kind, delimiter);
+      for (const bytes of this.#formatter.getWhitespace(token.kind, delimiter, this.#state.depth)) {
+        this.#tape.appendBytes(bytes);
+      }
 
       switch (token.kind) {
         case KIND.NULL:
-          this.#tape.appendBytes(this.#cache.null_bytes!);
+          this.#tape.appendBytes(Token.NULL.bytes);
           this.#state.appendLiteral();
           break;
         case KIND.TRUE:
-          this.#tape.appendBytes(this.#cache.true_bytes!);
+          this.#tape.appendBytes(Token.TRUE.bytes);
           this.#state.appendLiteral();
           break;
         case KIND.FALSE:
-          this.#tape.appendBytes(this.#cache.false_bytes!);
+          this.#tape.appendBytes(Token.FALSE.bytes);
           this.#state.appendLiteral();
           break;
         case KIND.STRING: {
-          const bytes = this.#encodeText(token.bytes);
+          const bytes = this.#escaper.escapeString(token.bytes);
 
           this.#tape.appendBytes(bytes);
 
@@ -150,15 +146,7 @@ class Encoder {
           break;
         }
         case KIND.NUMBER: {
-          let bytes = token.bytes;
-
-          if (this.#options.canonicalizeRawNumbers) {
-            const decoded = decodeText(bytes, !this.#options.allowInvalidUTF8);
-            const parsed = JSON.parse(decoded);
-            const encoded = encodeText(String(parsed));
-
-            bytes = encoded;
-          }
+          const bytes = this.#escaper.canonicalizeNumber(token.bytes);
 
           this.#tape.appendBytes(bytes);
           this.#state.appendNumber();
@@ -220,18 +208,16 @@ class Encoder {
         this.#tape.appendByte(ASCII.COMMA);
       }
 
-      this.#appendWhitespace(value.kind, delimiter);
+      for (const bytes of this.#formatter.getWhitespace(value.kind, delimiter, this.#state.depth)) {
+        this.#tape.appendBytes(bytes);
+      }
 
       let bytes = value.bytes;
 
       if (value.kind === KIND.STRING) {
-        bytes = this.#encodeText(bytes);
-      } else if (value.kind === KIND.NUMBER && this.#options.canonicalizeRawNumbers) {
-        const decoded = decodeText(bytes, !this.#options.allowInvalidUTF8);
-        const parsed = JSON.parse(decoded);
-        const encoded = encodeText(String(parsed));
-
-        bytes = encoded;
+        bytes = this.#escaper.escapeString(bytes);
+      } else if (value.kind === KIND.NUMBER) {
+        bytes = this.#escaper.canonicalizeNumber(bytes);
       }
 
       this.#tape.appendBytes(bytes);
@@ -281,78 +267,7 @@ class Encoder {
       throw error;
     }
   }
-
-  #appendWhitespace(kind: Kind, delimiter: ":" | "," | null): void {
-    if (delimiter === ":") {
-      if (this.#options.spaceAfterColon) {
-        this.#tape.appendByte(ASCII.SPACE);
-      }
-
-      return;
-    }
-
-    if (delimiter === "," && this.#options.spaceAfterComma) {
-      this.#tape.appendByte(ASCII.SPACE);
-    }
-
-    if (this.#options.multiline) {
-      const depth = this.#state.depth;
-
-      if (depth === 1) {
-        return;
-      }
-
-      const isClose = kind === KIND.OBJECT_END || kind === KIND.ARRAY_END;
-      const levels = isClose ? depth - 2 : depth - 1;
-
-      this.#tape.appendByte(ASCII.LINE_FEED);
-
-      if (this.#options.indentPrefix && this.#cache["indent_prefix_bytes"]) {
-        this.#tape.appendBytes(this.#cache["indent_prefix_bytes"]);
-      }
-
-      for (let i = 0; i < levels; i++) {
-        if (this.#cache["indent_bytes"]) {
-          this.#tape.appendBytes(this.#cache["indent_bytes"]);
-        }
-      }
-    }
-  }
-
-  #encodeText(bytes: Uint8Array): Uint8Array {
-    if (!this.#options.escapeForHTML && !this.#options.escapeForJS) {
-      if (!this.#options.allowInvalidUTF8) {
-        decodeText(bytes, true);
-      }
-
-      return bytes;
-    }
-
-    const decoded = decodeText(bytes, !this.#options.allowInvalidUTF8);
-    const parsed = JSON.parse(decoded);
-    let encoded = JSON.stringify(parsed);
-
-    if (this.#options.escapeForHTML) {
-      encoded = encoded.replace(
-        new RegExp("[<>&]", "g"),
-        (substring) => {
-          return (substring === "<"
-            ? UNICODE.OPEN_ANGLED_BRACKET
-            : substring === ">"
-            ? UNICODE.CLOSE_ANGLED_BRACKET
-            : UNICODE.AMPERSAND);
-        },
-      );
-    }
-
-    if (this.#options.escapeForJS) {
-      encoded = encoded
-        .replace(new RegExp("\\u2028", "g"), UNICODE.LINE_SEPARATOR)
-        .replace(new RegExp("\\u2029", "g"), UNICODE.PARAGRAPH_SEPARATOR);
-    }
-
-    return encodeText(encoded);
-  }
 }
 
-export default Encoder;
+export default Serializer;
+export type { SerializerOptions };

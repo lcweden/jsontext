@@ -1,53 +1,43 @@
 import type Token from "#src/api/token";
 import type Value from "#src/api/value";
 import { DEFAULT_ENCODER_OPTIONS } from "#src/common/constants";
-import Encoder from "#src/modules/encoder";
-import type { EncoderOptions } from "#src/types/options";
+import type { SerializerOptions } from "#src/modules/serializer";
+import Serializer from "#src/modules/serializer";
 
-/**
- * Options for {@link JSONTextEncoder}.
- *
- * @public
- */
-type JSONTextEncoderOptions = EncoderOptions;
+/** Options for {@link JSONTextEncoder}. */
+type JSONTextEncoderOptions = Partial<SerializerOptions>;
 
 /**
  * Low-level, stateful JSON encoder that produces bytes incrementally.
  *
  * Write tokens or values via {@link writeToken} / {@link writeValue}, then
- * retrieve the accumulated output with {@link bytes}. Call {@link reset} to
+ * retrieve the accumulated output with {@link takeBytes}. Call {@link reset} to
  * start a new document without creating a new instance.
  *
  * @public
  */
 class JSONTextEncoder {
-  #encoder: Encoder;
+  #serializer: Serializer;
+  #options: SerializerOptions;
 
   /**
+   * Creates a new JSONTextEncoder instance with the given options.
+   *
    * @param options - Encoding options.
    */
   constructor(options?: JSONTextEncoderOptions) {
-    this.#encoder = new Encoder({ ...DEFAULT_ENCODER_OPTIONS, ...options });
+    this.#options = { ...DEFAULT_ENCODER_OPTIONS, ...options };
+    this.#serializer = new Serializer(this.#options);
   }
 
-  /**
-   * The current nesting depth — `1` at the top level, incremented by each
-   * open object or array.
-   *
-   * @returns The current nesting depth — `1` at the top level, incremented by each open object or array.
-   */
-  depth(): number {
-    return this.#encoder.depth();
+  /** The current structural nesting depth. */
+  get depth(): number {
+    return this.#serializer.depth;
   }
 
-  /**
-   * The byte offset of the end of the last token written, equal to the total
-   * number of bytes produced so far.
-   *
-   * @returns The byte offset of the end of the last token written.
-   */
-  outputOffset(): number {
-    return this.#encoder.outputOffset();
+  /** The byte offset of the end of the last token written. */
+  get outputOffset(): number {
+    return this.#serializer.outputOffset;
   }
 
   /**
@@ -55,7 +45,7 @@ class JSONTextEncoder {
    * all structural state.
    */
   reset(): void {
-    this.#encoder.reset();
+    this.#serializer = new Serializer(this.#options);
   }
 
   /**
@@ -72,7 +62,7 @@ class JSONTextEncoder {
    * @returns A JSON Pointer string, e.g. `"/foo/0"`.
    */
   stackPointer(where: 0 | 1 | -1 = 1): string {
-    return this.#encoder.stackPointer(where).toString();
+    return this.#serializer.stackPointer(where).toString();
   }
 
   /**
@@ -83,7 +73,7 @@ class JSONTextEncoder {
    * @returns A copy of the bytes written since the last `takeBytes` call.
    */
   takeBytes(): Uint8Array {
-    return this.#encoder.takeBytes();
+    return this.#serializer.takeBytes();
   }
 
   /**
@@ -93,7 +83,7 @@ class JSONTextEncoder {
    * @throws {SyntacticError} If the token is not valid at the current position.
    */
   writeToken(token: Token): void {
-    this.#encoder.writeToken(token);
+    this.#serializer.writeToken(token);
   }
 
   /**
@@ -105,7 +95,7 @@ class JSONTextEncoder {
    *   position.
    */
   writeValue(value: Value): void {
-    this.#encoder.writeValue(value);
+    this.#serializer.writeValue(value);
   }
 }
 

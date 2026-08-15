@@ -1,6 +1,6 @@
 import type Token from "#src/api/token";
 import { DEFAULT_ENCODER_OPTIONS } from "#src/common/constants";
-import Encoder from "#src/modules/encoder";
+import Serializer from "#src/modules/serializer";
 import type { EncoderOptions } from "#src/types/options";
 
 /**
@@ -37,7 +37,7 @@ type JSONTextEncoderStreamOptions = EncoderOptions & {
  * ```
  */
 class JSONTextEncoderStream extends TransformStream<Token, Uint8Array> {
-  #encoder: Encoder;
+  #serializer: Serializer;
 
   /**
    * @param options - Encoder and queuing strategy options.
@@ -49,7 +49,7 @@ class JSONTextEncoderStream extends TransformStream<Token, Uint8Array> {
     super(
       {
         transform: (token, controller) => {
-          this.#encoder.writeToken(token);
+          this.#serializer.writeToken(token);
           this.#drain(controller);
         },
         flush: (controller) => {
@@ -60,14 +60,14 @@ class JSONTextEncoderStream extends TransformStream<Token, Uint8Array> {
       readableStrategy,
     );
 
-    this.#encoder = new Encoder(encoderOptions);
+    this.#serializer = new Serializer(encoderOptions);
   }
 
   /**
    * Flushes accumulated bytes from the encoder into the readable side.
    */
   #drain(controller: TransformStreamDefaultController<Uint8Array>): void {
-    const bytes = this.#encoder.takeBytes();
+    const bytes = this.#serializer.takeBytes();
 
     if (bytes.length > 0) {
       controller.enqueue(bytes);
