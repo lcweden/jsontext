@@ -4,18 +4,25 @@ import type Pointer from "#src/modules/pointer";
 import Scanner from "#src/modules/scanner";
 import State from "#src/modules/state";
 import type { Kind } from "#src/types/kind";
-import type { DecoderOptions } from "#src/types/options";
 import { decodeText } from "#src/utils/text";
 
+/** Options for {@link Parser}. */
+type ParserOptions = {
+  /** Allow duplicate object key names. By default, duplicate names throw a `SyntacticError`. */
+  allowDuplicateNames: boolean;
+  /** Allow invalid UTF-8 byte sequences. By default, invalid sequences throw a `TypeError`. */
+  allowInvalidUTF8: boolean;
+};
+
 class Parser {
+  #options: ParserOptions;
   #scanner: Scanner;
   #state: State;
-  #options: DecoderOptions;
 
-  constructor(bytes: Uint8Array, options: DecoderOptions) {
+  constructor(bytes: Uint8Array, options: ParserOptions) {
+    this.#options = options;
     this.#scanner = new Scanner(bytes);
     this.#state = new State(options);
-    this.#options = options;
   }
 
   get depth(): number {
@@ -222,3 +229,4 @@ class Parser {
 }
 
 export default Parser;
+export type { ParserOptions };

@@ -19,7 +19,7 @@ import { compareUTF16, consumeWhitespace } from "#src/utils/wire";
 class Value {
   #bytes: Uint8Array;
   #kind: Kind;
-  #pointer?: string;
+  #pointer: string | undefined;
 
   /**
    * Creates a `Value` from raw UTF-8 bytes.
@@ -100,7 +100,10 @@ class Value {
    * ```
    */
   canonicalize(): Value {
-    const parser = new Parser(this.#bytes, { allowDuplicateNames: true });
+    const allowInvalidUTF8 = false;
+    const allowDuplicateNames = true;
+    const parser = new Parser(this.#bytes, { allowInvalidUTF8, allowDuplicateNames });
+
     parser.close();
 
     return new Value(this.#processValue(parser));
@@ -123,7 +126,9 @@ class Value {
    */
   isValid(): boolean {
     try {
-      const parser = new Parser(this.#bytes, {});
+      const allowInvalidUTF8 = false;
+      const allowDuplicateNames = false;
+      const parser = new Parser(this.#bytes, { allowInvalidUTF8, allowDuplicateNames });
 
       parser.close();
 

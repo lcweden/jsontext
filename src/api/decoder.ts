@@ -1,15 +1,16 @@
 import Token from "#src/api/token";
 import Value from "#src/api/value";
 import { DEFAULT_DECODER_OPTIONS } from "#src/common/constants";
+import type { ParserOptions } from "#src/modules/parser";
 import Parser from "#src/modules/parser";
 import type { Kind } from "#src/types/kind";
-import type { DecoderOptions } from "#src/types/options";
 
-type JSONTextDecoderOptions = DecoderOptions;
+/** Options for {@link JSONTextDecoder}. */
+type JSONTextDecoderOptions = Partial<ParserOptions>;
 
 class JSONTextDecoder {
+  #options: ParserOptions;
   #parser: Parser;
-  #options: JSONTextDecoderOptions;
 
   constructor(bytes: Uint8Array = new Uint8Array(), options?: JSONTextDecoderOptions) {
     this.#options = { ...DEFAULT_DECODER_OPTIONS, ...options };
