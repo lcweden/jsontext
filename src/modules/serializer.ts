@@ -82,6 +82,15 @@ class Serializer {
   }
 
   /**
+   * Resets the serializer to its initial state, clearing the output buffer and
+   * all structural state.
+   */
+  reset(): void {
+    this.#state.reset();
+    this.#tape.reset();
+  }
+
+  /**
    * Extracts the written bytes as a slice and advances the base output offset,
    * preparing the tape for the next chunk (streaming use).
    *

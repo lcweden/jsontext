@@ -1,14 +1,14 @@
+import type { JSONTextDecoderOptions } from "#src/api/decoder";
 import Token from "#src/api/token";
 import { DEFAULT_DECODER_OPTIONS } from "#src/common/constants";
 import Parser from "#src/modules/parser";
-import type { DecoderOptions } from "#src/types/options";
 
 /**
  * Options for {@link JSONTextDecoderStream}.
  *
  * @public
  */
-type JSONTextDecoderStreamOptions = DecoderOptions & {
+type JSONTextDecoderStreamOptions = JSONTextDecoderOptions & {
   /** Queuing strategy for the writable side. */
   writableStrategy?: QueuingStrategy<Uint8Array>;
   /** Queuing strategy for the readable side. */
@@ -56,7 +56,7 @@ class JSONTextDecoderStream extends TransformStream<Uint8Array, Token> {
       readableStrategy,
     );
 
-    this.#parser = new Parser(new Uint8Array(), decoderOptions);
+    this.#parser = new Parser(decoderOptions);
   }
 
   /**

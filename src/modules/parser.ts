@@ -19,9 +19,9 @@ class Parser {
   #scanner: Scanner;
   #state: State;
 
-  constructor(bytes: Uint8Array, options: ParserOptions) {
+  constructor(options: ParserOptions) {
     this.#options = options;
-    this.#scanner = new Scanner(bytes);
+    this.#scanner = new Scanner();
     this.#state = new State(options);
   }
 
@@ -176,6 +176,11 @@ class Parser {
     }
 
     return this.#scanner.span;
+  }
+
+  reset(): void {
+    this.#scanner.reset();
+    this.#state.reset();
   }
 
   skipValue(): boolean {

@@ -52,6 +52,13 @@ class ObjectNameStack {
   }
 
   /**
+   * Resets the stack to an empty state, clearing all tracked names.
+   */
+  reset(): void {
+    this.#names.length = 0;
+  }
+
+  /**
    * Sets the active property name for the current object context.
    *
    * @param name The parsed object name.
@@ -77,20 +84,6 @@ class ObjectNamespaceStack {
   }
 
   /**
-   * Pushes a new, empty namespace Set when entering a new JSON object.
-   */
-  pushObject(): void {
-    this.#namespaces.push(new Set());
-  }
-
-  /**
-   * Pops and discards the namespace Set when exiting a JSON object.
-   */
-  popObject(): void {
-    this.#namespaces.pop();
-  }
-
-  /**
    * Attempts to insert a property name into the current namespace Set.
    *
    * @param name The object name to track.
@@ -106,6 +99,27 @@ class ObjectNamespaceStack {
     namespaces.add(name);
 
     return true;
+  }
+
+  /**
+   * Pushes a new, empty namespace Set when entering a new JSON object.
+   */
+  pushObject(): void {
+    this.#namespaces.push(new Set());
+  }
+
+  /**
+   * Pops and discards the namespace Set when exiting a JSON object.
+   */
+  popObject(): void {
+    this.#namespaces.pop();
+  }
+
+  /**
+   * Resets the stack to an empty state, clearing all tracked namespaces.
+   */
+  reset(): void {
+    this.#namespaces.length = 0;
   }
 }
 

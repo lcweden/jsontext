@@ -131,6 +131,15 @@ class State {
   }
 
   /**
+   * Resets the entire state, clearing the automaton, name stack, and namespace stack.
+   */
+  reset(): void {
+    this.#automaton.reset();
+    this.#names.reset();
+    this.#namespaces.reset();
+  }
+
+  /**
    * Sets the name for the current object property and validates it against duplicates.
    *
    * @param name The object key being processed.

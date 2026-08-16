@@ -1,9 +1,9 @@
+import type { JSONTextDecoderOptions } from "#src/api/decoder";
 import Value from "#src/api/value";
 import { DEFAULT_DECODER_OPTIONS, KIND, MAX_NESTING_DEPTH } from "#src/common/constants";
 import Parser from "#src/modules/parser";
 import type { Matcher } from "#src/modules/path";
 import Path from "#src/modules/path";
-import type { DecoderOptions } from "#src/types/options";
 import { encodeText } from "#src/utils/text";
 
 /**
@@ -11,7 +11,7 @@ import { encodeText } from "#src/utils/text";
  *
  * @public
  */
-type JSONTextSelectorStreamOptions = DecoderOptions & {
+type JSONTextSelectorStreamOptions = JSONTextDecoderOptions & {
   /** Queuing strategy for the writable side. */
   writableStrategy?: QueuingStrategy<Uint8Array>;
   /** Queuing strategy for the readable side. */
@@ -76,7 +76,7 @@ class JSONTextSelectorStream extends TransformStream<Uint8Array, Value> {
       readableStrategy,
     );
 
-    this.#parser = new Parser(new Uint8Array(), decoderOptions);
+    this.#parser = new Parser(decoderOptions);
     this.#matcher = new Path(encodeText(input)).createMatcher();
     this.#indexes = new Uint32Array(MAX_NESTING_DEPTH);
     this.#types = new Uint8Array(MAX_NESTING_DEPTH);

@@ -162,6 +162,14 @@ class Automaton {
   }
 
   /**
+   * Resets the automaton to its initial state, clearing the stack and setting the last entry to a new top-level array.
+   */
+  reset(): void {
+    this.#last = new Entry("array");
+    this.#stack.length = 0;
+  }
+
+  /**
    * Determines whether an implicit delimiter is required before the next token.
    *
    * @param kind The kind of the next incoming token.

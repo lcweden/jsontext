@@ -102,8 +102,9 @@ class Value {
   canonicalize(): Value {
     const allowInvalidUTF8 = false;
     const allowDuplicateNames = true;
-    const parser = new Parser(this.#bytes, { allowInvalidUTF8, allowDuplicateNames });
+    const parser = new Parser({ allowInvalidUTF8, allowDuplicateNames });
 
+    parser.push(this.#bytes);
     parser.close();
 
     return new Value(this.#processValue(parser));
@@ -128,8 +129,9 @@ class Value {
     try {
       const allowInvalidUTF8 = false;
       const allowDuplicateNames = false;
-      const parser = new Parser(this.#bytes, { allowInvalidUTF8, allowDuplicateNames });
+      const parser = new Parser({ allowInvalidUTF8, allowDuplicateNames });
 
+      parser.push(this.#bytes);
       parser.close();
 
       const result = parser.readValue();
@@ -177,7 +179,9 @@ class Value {
    * @throws {SyntacticError} If the bytes do not represent valid JSON.
    */
   *tokens(): Generator<Token> {
-    const parser = new Parser(this.#bytes, DEFAULT_DECODER_OPTIONS);
+    const parser = new Parser(DEFAULT_DECODER_OPTIONS);
+
+    parser.push(this.#bytes);
 
     while (true) {
       const bytes = parser.readToken();

@@ -9,12 +9,10 @@ import type { Kind } from "#src/types/kind";
 type JSONTextDecoderOptions = Partial<ParserOptions>;
 
 class JSONTextDecoder {
-  #options: ParserOptions;
   #parser: Parser;
 
-  constructor(bytes: Uint8Array = new Uint8Array(), options?: JSONTextDecoderOptions) {
-    this.#options = { ...DEFAULT_DECODER_OPTIONS, ...options };
-    this.#parser = new Parser(bytes, this.#options);
+  constructor(options?: JSONTextDecoderOptions) {
+    this.#parser = new Parser({ ...DEFAULT_DECODER_OPTIONS, ...options });
   }
 
   get depth(): number {
@@ -46,7 +44,7 @@ class JSONTextDecoder {
   }
 
   reset(): void {
-    this.#parser = new Parser(new Uint8Array(), this.#options);
+    this.#parser.reset();
   }
 
   readToken(): Token | undefined {

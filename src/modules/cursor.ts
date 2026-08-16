@@ -5,12 +5,10 @@ class Cursor {
   #offset: number;
 
   /**
-   * Creates a new Cursor instance starting with an initial chunk of bytes.
-   *
-   * @param bytes The initial Uint8Array chunk to read from.
+   * Creates a new Cursor instance.
    */
-  constructor(bytes: Uint8Array) {
-    this.#bytes = bytes;
+  constructor() {
+    this.#bytes = new Uint8Array();
     this.#ended = false;
     this.#offset = 0;
     this.#owned = false;
@@ -85,6 +83,16 @@ class Cursor {
    */
   close(): void {
     this.#ended = true;
+  }
+
+  /**
+   * Resets the cursor to an empty state, clearing the current buffer and resetting offsets.
+   */
+  reset(): void {
+    this.#bytes = new Uint8Array();
+    this.#ended = false;
+    this.#offset = 0;
+    this.#owned = false;
   }
 }
 

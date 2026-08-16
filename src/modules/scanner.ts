@@ -24,8 +24,8 @@ class Scanner {
   #kind: Kind | undefined;
   #delimiter: ":" | "," | null;
 
-  constructor(bytes: Uint8Array) {
-    this.#cursor = new Cursor(bytes);
+  constructor() {
+    this.#cursor = new Cursor();
     this.#skipper = new Skipper();
     this.#position = 0;
     this.#checkpoint = 0;
@@ -248,6 +248,17 @@ class Scanner {
     }
 
     return (this.#kind = kind, true);
+  }
+
+  reset(): void {
+    this.#cursor.reset();
+    this.#skipper.reset();
+    this.#position = 0;
+    this.#checkpoint = 0;
+    this.#start = 0;
+    this.#length = 0;
+    this.#kind = undefined;
+    this.#delimiter = null;
   }
 }
 

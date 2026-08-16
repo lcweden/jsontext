@@ -1,14 +1,14 @@
+import type { JSONTextEncoderOptions } from "#src/api/encoder";
 import type Token from "#src/api/token";
 import { DEFAULT_ENCODER_OPTIONS } from "#src/common/constants";
 import Serializer from "#src/modules/serializer";
-import type { EncoderOptions } from "#src/types/options";
 
 /**
  * Options for {@link JSONTextEncoderStream}.
  *
  * @public
  */
-type JSONTextEncoderStreamOptions = EncoderOptions & {
+type JSONTextEncoderStreamOptions = JSONTextEncoderOptions & {
   /** Queuing strategy for the writable side. */
   writableStrategy?: QueuingStrategy<Token>;
   /** Queuing strategy for the readable side. */

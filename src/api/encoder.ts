@@ -18,7 +18,6 @@ type JSONTextEncoderOptions = Partial<SerializerOptions>;
  */
 class JSONTextEncoder {
   #serializer: Serializer;
-  #options: SerializerOptions;
 
   /**
    * Creates a new JSONTextEncoder instance with the given options.
@@ -26,8 +25,7 @@ class JSONTextEncoder {
    * @param options - Encoding options.
    */
   constructor(options?: JSONTextEncoderOptions) {
-    this.#options = { ...DEFAULT_ENCODER_OPTIONS, ...options };
-    this.#serializer = new Serializer(this.#options);
+    this.#serializer = new Serializer({ ...DEFAULT_ENCODER_OPTIONS, ...options });
   }
 
   /** The current structural nesting depth. */
@@ -45,7 +43,7 @@ class JSONTextEncoder {
    * all structural state.
    */
   reset(): void {
-    this.#serializer = new Serializer(this.#options);
+    this.#serializer.reset();
   }
 
   /**

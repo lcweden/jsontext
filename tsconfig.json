@@ -2,8 +2,15 @@
   "compilerOptions": {
     "target": "esnext",
     "module": "esnext",
-    "lib": ["ESNext", "DOM"],
-    "paths": { "#src/*": ["./src/*"] },
+    "lib": [
+      "ESNext",
+      "DOM"
+    ],
+    "paths": {
+      "#src/*": [
+        "./src/*"
+      ]
+    },
     "moduleResolution": "bundler",
     "verbatimModuleSyntax": true,
     "moduleDetection": "force",
@@ -12,8 +19,10 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
-    "erasableSyntaxOnly": true,
-    "exactOptionalPropertyTypes": true
+    "erasableSyntaxOnly": true
   },
-  "include": ["src", "web"]
+  "include": [
+    "src",
+    "web"
+  ]
 }

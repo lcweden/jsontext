@@ -1,14 +1,14 @@
+import type { JSONTextDecoderOptions } from "#src/api/decoder";
 import Value from "#src/api/value";
 import { DEFAULT_DECODER_OPTIONS } from "#src/common/constants";
 import Parser from "#src/modules/parser";
-import type { DecoderOptions } from "#src/types/options";
 
 /**
  * Options for {@link JSONTextLineStream}.
  *
  * @public
  */
-type JSONTextLineStreamOptions = DecoderOptions & {
+type JSONTextLineStreamOptions = JSONTextDecoderOptions & {
   /** Queuing strategy for the writable side. */
   writableStrategy?: QueuingStrategy<Uint8Array>;
   /** Queuing strategy for the readable side. */
@@ -56,7 +56,7 @@ class JSONTextLineStream extends TransformStream<Uint8Array, Value> {
       readableStrategy,
     );
 
-    this.#parser = new Parser(new Uint8Array(), decoderOptions);
+    this.#parser = new Parser(decoderOptions);
   }
 
   /**
