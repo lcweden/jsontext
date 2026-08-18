@@ -1,42 +1,9 @@
 {
   "name": "jsontext",
   "version": "0.2.3",
+  "description": "A state machine for incremental JSON processing with high-level APIs.",
+  "keywords": ["json", "streaming", "parser", "encoder"],
   "license": "MIT",
-  "description": "A state machine for incremental JSON processing.",
-  "keywords": [
-    "json",
-    "json-path",
-    "json-pointer",
-    "jsonl",
-    "jsonlines",
-    "parser",
-    "encoder",
-    "decoder",
-    "stream",
-    "streaming",
-    "web-streams",
-    "ndjson",
-    "state-machine"
-  ],
-  "type": "module",
-  "types": "./dist/index.d.ts",
-  "imports": {
-    "#src/*": "./src/*"
-  },
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
-    }
-  },
-  "files": [
-    "dist/**/*",
-    "!dist/**/*.map"
-  ],
-  "author": {
-    "name": "lcweden",
-    "url": "https://github.com/lcweden"
-  },
   "homepage": "https://github.com/lcweden/jsontext",
   "repository": {
     "type": "git",
@@ -45,23 +12,30 @@
   "bugs": {
     "url": "https://github.com/lcweden/jsontext/issues"
   },
+  "author": {
+    "name": "lcweden",
+    "url": "https://github.com/lcweden"
+  },
+  "type": "module",
+  "types": "./dist/index.d.ts",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "imports": {
+    "#src/*": ["./dist/*.js", "./dist/*.ts", "./dist/*.d.ts"]
+  },
+  "exports": {
+    ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" }
+  },
+  "files": ["dist"],
   "scripts": {
-    "build": "vite build",
-    "bench": "deno task bench",
-    "dev": "vite",
-    "format": "deno task format",
-    "lint": "deno task lint",
-    "preview": "vite preview",
     "test": "deno task test"
   },
-  "sideEffects": false,
+  "directories": {
+    "doc": "docs",
+    "test": "tests"
+  },
   "engines": {
     "node": ">=18"
   },
-  "devDependencies": {
-    "@types/node": "^25.9.1",
-    "typescript": "~6.0.2",
-    "unplugin-dts": "^1.0.1",
-    "vite": "^8.0.9"
-  }
+  "sideEffects": false
 }

@@ -1,12 +1,21 @@
-name: Bump
+name: Bump Version
 
 on:
   workflow_dispatch:
     inputs:
-      version:
-        description: "new version(e.g., 1.2.3)"
+      increment:
+        description: "version increment"
         required: true
-        type: string
+        default: patch
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+          - prepatch
+          - preminor
+          - premajor
+          - prerelease
 
 permissions:
   contents: write
@@ -19,24 +28,19 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v6
+      - name: Set up Deno
+        uses: denoland/setup-deno@v2
         with:
-          node-version: lts/*
-          cache: npm
-          registry-url: https://registry.npmjs.org/
+          deno-version: v2.9.5
 
-      - name: Store Version
+      - name: Bump Package Versions
+        env:
+          INCREMENT: ${{ inputs.increment }}
         run: |
-          TARGET_VERSION="${{ github.event.inputs.version }}"
-          TARGET_VERSION="${TARGET_VERSION#v}"
-          echo "VERSION=$TARGET_VERSION" >> $GITHUB_ENV
-
-      - name: Update Package Version
-        run: |
-          jq ".version = \"$VERSION\"" package.json > tmp.json && mv tmp.json package.json
-          jq ".version = \"$VERSION\"" deno.json > tmp.json && mv tmp.json deno.json
-          npm install --package-lock-only --ignore-scripts
+          deno bump-version "$INCREMENT" --config deno.json
+          deno bump-version "$INCREMENT" --config package.json
+          VERSION="$(deno bump-version --config deno.json)"
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
 
       - name: Setup Git
         run: |

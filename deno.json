@@ -4,10 +4,13 @@
   "license": "MIT",
   "tasks": {
     "bench": "deno bench --allow-all",
+    "build": "deno task transpile && deno task bundle",
+    "bundle": "deno bundle src/index.ts --minify --outdir dist --platform browser --sourcemap",
     "check": "deno check src/index.ts",
     "format": "deno fmt",
     "lint": "deno lint",
-    "test": "deno test --coverage --allow-all"
+    "test": "deno test --allow-all --coverage",
+    "transpile": "cd src && deno transpile index.ts --outdir ../dist --declaration"
   },
   "imports": {
     "#src/": "./src/",
@@ -27,9 +30,9 @@
     }
   },
   "unstable": ["sloppy-imports"],
-  "exclude": ["node_modules/", "public/", "dist/"],
+  "exclude": ["dist/"],
   "publish": {
     "include": ["src/", "README.md", "LICENSE", "deno.json"],
-    "exclude": ["tests/", ".github/", ".vscode/", "dist/", "public/"]
+    "exclude": ["tests/", ".github/", ".vscode/", "dist/"]
   }
 }
