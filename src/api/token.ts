@@ -1,5 +1,5 @@
 import { KIND } from "#src/common/constants";
-import type { Kind } from "#src/common/types";
+import { Kind } from "#src/common/types";
 import { normalize } from "#src/utils/kind";
 import { decodeText, encodeText } from "#src/utils/text";
 
@@ -192,7 +192,7 @@ class Token {
    * Decodes this token as a JavaScript string.
    *
    * @returns The unescaped string value.
-   * @throws {TypeError} If this token is not of kind {@link KIND.STRING}.
+   * @throws {TypeError} If this token is not of kind {@link Kind.STRING}.
    */
   asString(): string {
     if (this.#kind !== KIND.STRING) {
@@ -209,7 +209,7 @@ class Token {
    * Decodes this token as a JavaScript number.
    *
    * @returns The numeric value.
-   * @throws {TypeError} If this token is not of kind {@link KIND.NUMBER}.
+   * @throws {TypeError} If this token is not of kind {@link Kind.NUMBER}.
    */
   asNumber(): number {
     if (this.#kind !== KIND.NUMBER) {
@@ -226,7 +226,7 @@ class Token {
    * Decodes this token as a JavaScript boolean.
    *
    * @returns `true` for `true` tokens, `false` for `false` tokens.
-   * @throws {TypeError} If this token is not of kind {@link KIND.TRUE} or {@link KIND.FALSE}.
+   * @throws {TypeError} If this token is not of kind {@link Kind.TRUE} or {@link Kind.FALSE}.
    */
   asBoolean(): boolean {
     if (this.#kind === KIND.TRUE) {
@@ -244,7 +244,7 @@ class Token {
    * Decodes this token as `null`.
    *
    * @returns `null`.
-   * @throws {TypeError} If this token is not of kind {@link KIND.NULL}.
+   * @throws {TypeError} If this token is not of kind {@link Kind.NULL}.
    */
   asNull(): null {
     if (this.#kind !== KIND.NULL) {

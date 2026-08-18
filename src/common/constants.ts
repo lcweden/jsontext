@@ -1,4 +1,4 @@
-/** ASCII byte values used for JSON parsing and encoding. */
+/** ASCII byte values used to recognize and emit JSON syntax. */
 export const ASCII = {
   TAB: 0x09,
   LINE_FEED: 0x0A,
@@ -52,7 +52,7 @@ export const ASCII = {
   DELETE: 0x7F,
 } as const;
 
-/** Unicode escape sequences for safe HTML and JavaScript embedding. */
+/** Unicode escape sequences used when embedding JSON in HTML or JavaScript. */
 export const UNICODE = {
   OPEN_ANGLED_BRACKET: "\\u003c",
   CLOSE_ANGLED_BRACKET: "\\u003e",
@@ -61,7 +61,7 @@ export const UNICODE = {
   PARAGRAPH_SEPARATOR: "\\u2029",
 } as const;
 
-/** String discriminants identifying the structural role of a JSON token. */
+/** String discriminants identifying the kind of a JSON token. */
 export const KIND = {
   NULL: "null",
   FALSE: "false",
@@ -74,16 +74,16 @@ export const KIND = {
   ARRAY_END: "]",
 } as const;
 
-/** Maximum JSON nesting depth supported by the decoder and encoder. */
+/** Maximum JSON nesting depth accepted by the decoder and encoder. */
 export const MAX_NESTING_DEPTH = 10_000;
 
-/** Default option values for decoding. */
+/** Default options applied when constructing a decoder or decoder stream. */
 export const DEFAULT_DECODER_OPTIONS = {
   allowDuplicateNames: false,
   allowInvalidUTF8: false,
 } as const;
 
-/** Default option values for encoding. */
+/** Default options applied when constructing an encoder or encoder stream. */
 export const DEFAULT_ENCODER_OPTIONS = {
   allowInvalidUTF8: false,
   allowDuplicateNames: false,
@@ -97,19 +97,19 @@ export const DEFAULT_ENCODER_OPTIONS = {
   indentPrefix: "",
 } as const;
 
-/** JSON Path identifier types. */
+/** Numeric identifiers used by the JSON Path parser. */
 export const IDENTIFIER = {
   ROOT: 0,
   CURRENT: 1,
 } as const;
 
-/** JSON Path segment kinds. */
+/** Numeric segment kinds used by the JSON Path parser. */
 export const SEGMENT = {
   CHILD: 0,
   DESCENDANT: 1,
 } as const;
 
-/** JSON Path selector kinds. */
+/** Numeric selector kinds used by the JSON Path parser. */
 export const SELECTOR = {
   NAME: 0,
   WILDCARD: 1,

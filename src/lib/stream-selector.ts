@@ -31,8 +31,8 @@ type JSONTextSelectorStreamOptions = JSONTextDecoderOptions & {
  * - **Descendant Segment**: `..`
  * - **Name Selector**: `.name` or `['name']`
  * - **Wildcard Selector**: `.*` or `[*]`
- * - **Index Selector (positive)**: `[1]`
- * - **Array Slice Selector (positive)**: `[0:5]` or `[::2]`
+ * - **Index Selector (non-negative)**: `[1]`
+ * - **Array Slice Selector (non-negative)**: `[0:5]` or `[::2]`
  *
  * @see https://www.rfc-editor.org/rfc/rfc9535
  * @public
@@ -52,8 +52,10 @@ class JSONTextSelectorStream extends TransformStream<Uint8Array, Value> {
   #depth: number;
 
   /**
-   * @param input - A JSON Path expression string (subset of RFC 9535) selecting which values to emit.
-   * @param options - Decoder and queuing strategy options.
+   * Creates a stream that emits values selected by a JSON Path expression.
+   *
+   * @param input A JSON Path expression selecting which values to emit.
+   * @param options Decoder and queuing strategy options.
    * @throws {SyntaxError} If the path expression is invalid.
    */
   constructor(input: string, options: JSONTextSelectorStreamOptions = {}) {
@@ -84,10 +86,7 @@ class JSONTextSelectorStream extends TransformStream<Uint8Array, Value> {
     this.#depth = 0;
   }
 
-  /**
-   * Reads decoder output step by step, advancing the path matcher, and
-   * enqueues values at positions that satisfy the path.
-   */
+  /** Reads decoder output and enqueues values at positions that satisfy the path. */
   #drain(controller: TransformStreamDefaultController<Value>): void {
     while (true) {
       const kind = this.#parser.peekKind();

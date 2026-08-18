@@ -2,19 +2,12 @@ import { MAX_NESTING_DEPTH } from "#src/common/constants";
 import type { Kind } from "#src/common/types";
 import Entry from "#src/modules/entry";
 
-/**
- * A state machine that enforces JSON syntax rules and tracks the structural nesting depth.
- * It ensures that the sequence of incoming tokens adheres strictly to `RFC 8259`.
- *
- * @internal
- */
+/** A state machine that enforces JSON syntax rules and tracks structural nesting depth. */
 class Automaton {
   #last: Entry;
   #stack: Entry[];
 
-  /**
-   * Creates a new Automaton instance.
-   */
+  /** Creates a new Automaton instance. */
   constructor() {
     this.#last = new Entry("array");
     this.#stack = [];
@@ -48,12 +41,7 @@ class Automaton {
     this.#last.increment();
   }
 
-  /**
-   * Appends a string value to the current context.
-   *
-   * Unlike {@link appendLiteral}, strings are valid in both object-name and
-   * value positions, so no structural guard is applied.
-   */
+  /** Appends a string value without applying an object-name guard. */
   appendString(): void {
     this.#last.increment();
   }
@@ -161,9 +149,7 @@ class Automaton {
     }
   }
 
-  /**
-   * Resets the automaton to its initial state, clearing the stack and setting the last entry to a new top-level array.
-   */
+  /** Resets the automaton to its initial top-level array state. */
   reset(): void {
     this.#last = new Entry("array");
     this.#stack.length = 0;

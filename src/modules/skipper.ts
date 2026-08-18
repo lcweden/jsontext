@@ -1,11 +1,13 @@
 import { ASCII } from "#src/common/constants";
 
+/** Skips complete JSON values while preserving progress across input chunks. */
 class Skipper {
   #depth: number;
   #inString: boolean;
   #inStringEscape: boolean;
   #offset: number;
 
+  /** Creates a new value skipper. */
   constructor() {
     this.#depth = 0;
     this.#inString = false;
@@ -13,6 +15,7 @@ class Skipper {
     this.#offset = 0;
   }
 
+  /** Resets the skipper to its initial state. */
   reset(): void {
     this.#depth = 0;
     this.#inString = false;
@@ -20,6 +23,13 @@ class Skipper {
     this.#offset = 0;
   }
 
+  /**
+   * Scans for the end of the JSON value beginning at `start`.
+   *
+   * @param bytes The input bytes to scan.
+   * @param start The position at which the value begins.
+   * @returns The value length, or `0` when more input is needed.
+   */
   skip(bytes: Uint8Array, start: number): number {
     let current = start + this.#offset;
 

@@ -25,8 +25,8 @@ class Value {
    * Creates a `Value` from raw UTF-8 bytes.
    * Leading whitespace is accepted and preserved in {@link bytes}.
    *
-   * @param bytes - Raw UTF-8 bytes of a complete JSON value.
-   * @param pointer - Optional JSON Pointer (RFC 6901) indicating where this valuewas located in the source document. Typically set by {@link JSONTextSelectorStream}.
+   * @param bytes Raw UTF-8 bytes of a complete JSON value.
+   * @param pointer Optional JSON Pointer indicating where this value was located in the source document.
    * @throws {RangeError} If `bytes` is empty.
    * @throws {SyntaxError} If no valid JSON token is found after skipping leading whitespace.
    */
@@ -92,7 +92,7 @@ class Value {
    * and normalizes numbers. The result is deterministic and idempotent.
    *
    * @returns A new `Value` in canonical form.
-   * @throws {SyntacticError} If the bytes do not represent valid JSON.
+   * @throws {SyntaxError} If the bytes do not represent valid JSON.
    * @example
    * ```javascript
    * Value.from({ b: 2, a: 1 }).canonicalize().text() // '{"a":1,"b":2}'
@@ -176,7 +176,7 @@ class Value {
    * tokens including structural delimiters, keys, and nested values.
    *
    * @yields {Token} Tokens in document order.
-   * @throws {SyntacticError} If the bytes do not represent valid JSON.
+   * @throws {SyntaxError} If the bytes do not represent valid JSON.
    */
   *tokens(): Generator<Token> {
     const parser = new Parser(DEFAULT_DECODER_OPTIONS);

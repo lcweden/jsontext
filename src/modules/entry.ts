@@ -1,11 +1,7 @@
 import { KIND } from "#src/common/constants";
 import type { Kind } from "#src/common/types";
 
-/**
- * Represents a single depth level in the automaton stack, which can be either an object or an array.
- *
- * @internal
- */
+/** Represents one object or array depth level in the automaton stack. */
 class Entry {
   #type: "object" | "array";
   #count: number;
@@ -69,16 +65,12 @@ class Entry {
     return (!!this.count && !this.needsObjectValue && !isObjectEnd && !isArrayEnd);
   }
 
-  /**
-   * Increases the count of elements in the entry.
-   */
+  /** Increases the count of elements in the entry. */
   increment(): void {
     this.#count++;
   }
 
-  /**
-   * Decreases the count of elements in the entry.
-   */
+  /** Decreases the count of elements in the entry. */
   decrement(): void {
     this.#count--;
   }

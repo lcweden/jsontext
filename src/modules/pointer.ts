@@ -1,8 +1,4 @@
-/**
- * Represents a JSON Pointer as defined in RFC 6901.
- *
- * @internal
- */
+/** Represents a JSON Pointer and its unescaped reference tokens. */
 class Pointer {
   #tokens: string[];
 
@@ -23,9 +19,9 @@ class Pointer {
   /**
    * Parses a JSON Pointer string into a `Pointer` instance.
    *
-   * @param value The RFC 6901 compliant pointer string (e.g., `""` or `"/foo/bar"`).
+   * @param value A JSON Pointer string such as `""` or `"/foo/bar"`.
    * @returns A parsed `Pointer` object.
-   * @throws {TypeError} If the string is not empty and does not start with a slash (`/`).
+   * @throws {TypeError} If the string is not empty and does not start with `/`.
    * @example
    * ```javascript
    * Pointer.parse("").tokens         // []
@@ -72,7 +68,7 @@ class Pointer {
   }
 
   /**
-   * Serializes the Pointer instance back into an RFC 6901 compliant string.
+   * Serializes the pointer back into a JSON Pointer string.
    *
    * @returns The serialized pointer string, or `""` for the root pointer.
    * @example

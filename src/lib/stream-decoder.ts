@@ -34,7 +34,9 @@ class JSONTextDecoderStream extends TransformStream<Uint8Array, Token> {
   #parser: Parser;
 
   /**
-   * @param options - Decoder and queuing strategy options.
+   * Creates a stream that decodes byte chunks into JSON tokens.
+   *
+   * @param options Decoder and queuing strategy options.
    */
   constructor(options: JSONTextDecoderStreamOptions = {}) {
     const { writableStrategy, readableStrategy, ...rest } = options;
@@ -59,9 +61,7 @@ class JSONTextDecoderStream extends TransformStream<Uint8Array, Token> {
     this.#parser = new Parser(decoderOptions);
   }
 
-  /**
-   * Drains all available tokens from the decoder into the readable side.
-   */
+  /** Drains all available tokens from the decoder into the readable side. */
   #drain(controller: TransformStreamDefaultController<Token>): void {
     for (let bytes; (bytes = this.#parser.readToken()) !== undefined;) {
       controller.enqueue(new Token(bytes));

@@ -2,20 +2,24 @@ import { ASCII } from "#src/common/constants";
 import { decodeText } from "#src/utils/text";
 
 /**
- * Compares two strings by UTF-16 code unit order, as required by RFC 8785 §3.2.3.
+ * Compares two strings by UTF-16 code unit order.
+ *
  * @param a The first string to compare.
  * @param b The second string to compare.
- * @returns A negative number if a < b, positive if a > b, or 0 if equal.
+ * @returns A negative number if `a` sorts before `b`, a positive number if it sorts after `b`, or `0` when both strings are equal.
  */
 function compareUTF16(a: string, b: string): number {
   return a < b ? -1 : a > b ? 1 : 0;
 }
 
 /**
- * Consumes whitespace characters from the given position in the Uint8Array bytes.
- * @param bytes The Uint8Array bytes to consume whitespace from.
- * @param position The position in the bytes to start consuming.
- * @returns The new position after consuming whitespace.
+ * Advances past JSON whitespace starting at a byte position.
+ *
+ * Only space, tab, line feed, and carriage return are treated as whitespace.
+ *
+ * @param bytes The input bytes to scan.
+ * @param position The position at which to start scanning.
+ * @returns The first position that does not contain JSON whitespace.
  */
 function consumeWhitespace(bytes: Uint8Array, position: number): number {
   while (position < bytes.length) {
@@ -41,10 +45,11 @@ function consumeWhitespace(bytes: Uint8Array, position: number): number {
 }
 
 /**
- * Consumes the "null" literal from the given position in the Uint8Array bytes.
- * @param bytes The Uint8Array bytes to consume from.
- * @param position The position in the bytes to start consuming.
- * @returns The number of bytes consumed if the "null" literal is found, otherwise 0.
+ * Matches the `null` literal at a byte position.
+ *
+ * @param bytes The input bytes to scan.
+ * @param position The position at which to start scanning.
+ * @returns `4` when `null` starts at `position`, otherwise `0`.
  */
 function consumeNull(bytes: Uint8Array, position: number): number {
   if (bytes.length - position >= 4) {
@@ -62,10 +67,11 @@ function consumeNull(bytes: Uint8Array, position: number): number {
 }
 
 /**
- * Consumes the "true" literal from the given position in the Uint8Array bytes.
- * @param bytes The Uint8Array bytes to consume from.
- * @param position The position in the bytes to start consuming.
- * @returns The number of bytes consumed if the "true" literal is found, otherwise 0.
+ * Matches the `true` literal at a byte position.
+ *
+ * @param bytes The input bytes to scan.
+ * @param position The position at which to start scanning.
+ * @returns `4` when `true` starts at `position`, otherwise `0`.
  */
 function consumeTrue(bytes: Uint8Array, position: number): number {
   if (bytes.length - position >= 4) {
@@ -83,10 +89,11 @@ function consumeTrue(bytes: Uint8Array, position: number): number {
 }
 
 /**
- * Consumes the "false" literal from the given position in the Uint8Array bytes.
- * @param bytes The Uint8Array bytes to consume from.
- * @param position The position in the bytes to start consuming.
- * @returns The number of bytes consumed if the "false" literal is found, otherwise 0.
+ * Matches the `false` literal at a byte position.
+ *
+ * @param bytes The input bytes to scan.
+ * @param position The position at which to start scanning.
+ * @returns `5` when `false` starts at `position`, otherwise `0`.
  */
 function consumeFalse(bytes: Uint8Array, position: number): number {
   if (bytes.length - position >= 5) {
@@ -105,11 +112,16 @@ function consumeFalse(bytes: Uint8Array, position: number): number {
 }
 
 /**
- * Consumes a string literal from the given position in the Uint8Array bytes.
- * @param bytes The Uint8Array bytes to consume from.
- * @param position The position in the bytes to start consuming.
- * @param validateUTF8 Whether to validate the string as UTF-8.
- * @returns The number of bytes consumed if a string literal is found, otherwise 0.
+ * Consumes a complete JSON string literal from a byte position.
+ *
+ * Escapes, control characters, and optionally UTF-8 validity are checked by
+ * the underlying resumable scanner. An incomplete or invalid string returns
+ * `0`.
+ *
+ * @param bytes The input bytes to scan.
+ * @param position The position at which to start scanning.
+ * @param validateUTF8 Whether to reject invalid UTF-8 sequences.
+ * @returns The number of bytes in the string literal, or `0` when it is incomplete or invalid.
  */
 function consumeString(bytes: Uint8Array, position: number, validateUTF8 = true): number {
   const result = consumeStringResumable(bytes, position, 0, validateUTF8);
@@ -118,12 +130,17 @@ function consumeString(bytes: Uint8Array, position: number, validateUTF8 = true)
 }
 
 /**
- * Consumes a string literal from the given position, supporting resumption from a previous offset.
- * @param bytes The Uint8Array bytes to consume from.
- * @param position The position in the bytes to start consuming.
- * @param offset The relative number of bytes already scanned in previous chunks.
- * @param validateUTF8 Whether to validate the string as UTF-8.
- * @returns An object containing the number of bytes consumed (or the scan offset if incomplete) and whether the string is complete.
+ * Scans a JSON string literal and supports resuming from a previous chunk.
+ *
+ * When the string is incomplete, `consumed` is the relative scan offset to
+ * use when continuing with the next chunk. When the string is complete,
+ * `consumed` is its total byte length from `position`.
+ *
+ * @param bytes The current input chunk to scan.
+ * @param position The position at which the string starts.
+ * @param offset The relative scan offset returned for a previous incomplete chunk.
+ * @param validateUTF8 Whether to reject invalid UTF-8 sequences.
+ * @returns The scan result, including the consumed byte count and completion status. An invalid start or control character returns `{ consumed: 0, completed: false }`.
  */
 function consumeStringResumable(
   bytes: Uint8Array,
@@ -177,10 +194,14 @@ function consumeStringResumable(
 }
 
 /**
- * Consumes a number literal from the given position in the Uint8Array bytes.
- * @param bytes The Uint8Array bytes to consume from.
- * @param position The position in the bytes to start consuming.
- * @returns The number of bytes consumed if a number literal is found, otherwise 0.
+ * Scans a JSON number literal from a byte position.
+ *
+ * The result is the length of the valid number prefix. Delimiter validation is
+ * performed by the parser after this helper returns.
+ *
+ * @param bytes The input bytes to scan.
+ * @param position The position at which to start scanning.
+ * @returns The length of the number literal, or `0` when the bytes do not begin a valid number.
  */
 function consumeNumber(bytes: Uint8Array, position: number): number {
   if (position >= bytes.length) {
@@ -279,10 +300,11 @@ function consumeNumber(bytes: Uint8Array, position: number): number {
 }
 
 /**
- * Consumes a simple string literal (without escape sequences) from the given position in the Uint8Array bytes.
- * @param bytes The Uint8Array bytes to consume from.
- * @param position The position in the bytes to start consuming.
- * @returns The number of bytes consumed if a simple string literal is found, otherwise 0.
+ * Scans a JSON string literal that contains no escapes.
+ *
+ * @param bytes The input bytes to scan.
+ * @param position The position at which to start scanning.
+ * @returns The length of the string literal, or `0` when it is incomplete or contains an escape, control character, or non-ASCII byte.
  */
 function consumeSimpleString(bytes: Uint8Array, position: number): number {
   if (position >= bytes.length || bytes[position] !== ASCII.QUOTE) {
@@ -309,10 +331,11 @@ function consumeSimpleString(bytes: Uint8Array, position: number): number {
 }
 
 /**
- * Consumes a simple number literal (without fractional or exponential parts) from the given position in the Uint8Array bytes.
- * @param bytes The Uint8Array bytes to consume from.
- * @param position The position in the bytes to start consuming.
- * @returns The number of bytes consumed if a simple number literal is found, otherwise 0.
+ * Scans an integer JSON number without a sign, fraction, or exponent.
+ *
+ * @param bytes The input bytes to scan.
+ * @param position The position at which to start scanning.
+ * @returns The length of the integer, or `0` when the bytes do not begin a simple number or are followed immediately by a fraction or exponent.
  */
 function consumeSimpleNumber(bytes: Uint8Array, position: number): number {
   if (position >= bytes.length) {

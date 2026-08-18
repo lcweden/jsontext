@@ -14,37 +14,49 @@ type ParserOptions = {
   allowInvalidUTF8: boolean;
 };
 
+/** Coordinates incremental JSON byte scanning with structural state validation. */
 class Parser {
   #options: ParserOptions;
   #scanner: Scanner;
   #state: State;
 
+  /** Creates a new parser with the supplied decoding options. */
   constructor(options: ParserOptions) {
     this.#options = options;
     this.#scanner = new Scanner();
     this.#state = new State(options);
   }
 
+  /** The current structural nesting depth. */
   get depth(): number {
     return this.#state.depth;
   }
 
+  /** The absolute byte offset of the current scanner position. */
   get inputOffset(): number {
     return this.#scanner.offset;
   }
 
+  /** The most recently read object property name. */
   get lastObjectName(): string {
     return this.#state.lastObjectName;
   }
 
+  /** Whether the current object context expects a property name. */
   get needObjectName(): boolean {
     return this.#state.needsObjectName;
   }
 
+  /** The unconsumed bytes currently retained by the scanner. */
   get unreadBytes(): Uint8Array {
     return this.#scanner.unreadBytes;
   }
 
+  /**
+   * Verifies that the input is complete and contains no trailing characters.
+   *
+   * @throws {SyntaxError} If input ends inside a structure or contains trailing non-whitespace bytes.
+   */
   checkEOF(): void {
     if (this.#state.depth > 1) {
       throw new SyntaxError("Unexpected end of input");
@@ -57,10 +69,17 @@ class Parser {
     }
   }
 
+  /** Marks the input as complete so unterminated final tokens can be diagnosed. */
   close(): void {
     this.#scanner.close();
   }
 
+  /**
+   * Peeks at the next token kind without consuming it.
+   *
+   * @returns The next {@link Kind}, or `undefined` when more input is needed.
+   * @throws {SyntacticError} If the next bytes contain invalid JSON syntax or delimiters.
+   */
   peekKind(): Kind | undefined {
     try {
       if (!this.#scanner.peekNext()) {
@@ -99,10 +118,17 @@ class Parser {
     return kind;
   }
 
+  /** Appends a chunk of JSON bytes to the input buffer. */
   push(bytes: Uint8Array): void {
     this.#scanner.appendBytes(bytes);
   }
 
+  /**
+   * Consumes the next JSON token.
+   *
+   * @returns The raw token bytes, or `undefined` when more input is needed.
+   * @throws {SyntacticError} If the next token is invalid or violates the current structure.
+   */
   readToken(): Uint8Array | undefined {
     const kind = this.peekKind();
 
@@ -170,6 +196,12 @@ class Parser {
     return this.#scanner.span;
   }
 
+  /**
+   * Consumes the next complete JSON value.
+   *
+   * @returns The raw value bytes, or `undefined` when more input is needed.
+   * @throws {SyntacticError} If the next value is invalid or violates the current structure.
+   */
   readValue(): Uint8Array | undefined {
     if (!this.peekKind() || !this.skipValue()) {
       return;
@@ -178,11 +210,18 @@ class Parser {
     return this.#scanner.span;
   }
 
+  /** Resets the scanner and structural state to the initial state. */
   reset(): void {
     this.#scanner.reset();
     this.#state.reset();
   }
 
+  /**
+   * Consumes the next complete JSON value without returning its bytes.
+   *
+   * @returns `true` when a value was consumed, or `false` when more input is needed.
+   * @throws {SyntacticError} If the next value is invalid or violates the current structure.
+   */
   skipValue(): boolean {
     const kind = this.peekKind();
 
@@ -228,6 +267,12 @@ class Parser {
     return true;
   }
 
+  /**
+   * Returns a JSON Pointer for a position relative to the current parser state.
+   *
+   * @param where Relative position: `-1` previous, `0` current, or `1` next.
+   * @returns A {@link Pointer} for the selected position.
+   */
   stackPointer(where: 0 | 1 | -1 = 1): Pointer {
     return this.#state.stackPointer(where);
   }

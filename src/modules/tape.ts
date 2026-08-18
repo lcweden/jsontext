@@ -1,16 +1,10 @@
-/**
- * A dynamic, pre-allocated buffer used as the primary write destination for the Encoder.
- *
- * @internal
- */
+/** A dynamic, pre-allocated buffer used as the primary write destination for the encoder. */
 class Tape {
   #baseOffset: number;
   #length: number;
   #bytes: Uint8Array;
 
-  /**
-   * Creates a new Tape instance with an initial buffer size of 256 bytes.
-   */
+  /** Creates a new Tape instance with an initial buffer size of 256 bytes. */
   constructor() {
     this.#baseOffset = 0;
     this.#length = 0;
@@ -63,18 +57,16 @@ class Tape {
     this.#length += bytes.length;
   }
 
-  /**
-   * Resets the buffer, clearing all written bytes and resetting the base offset.
-   */
+  /** Resets the buffer, clearing all written bytes and resetting the base offset. */
   reset(): void {
     this.#length = 0;
     this.#baseOffset = 0;
   }
 
   /**
-   * Extracts the currently written bytes and prepares the Tape for the next chunk of data.
-   * This method advances the base offset and resets the length pointer to 0,
-   * allowing the internal buffer to be safely overwritten (Buffer Reuse).
+   * Extracts the currently written bytes and prepares the tape for the next chunk of data.
+   * This advances the base offset and resets the length pointer to `0`, allowing the internal
+   * buffer to be safely overwritten.
    *
    * @returns A copy (slice) of the bytes written so far.
    */

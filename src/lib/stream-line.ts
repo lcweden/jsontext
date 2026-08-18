@@ -35,7 +35,9 @@ class JSONTextLineStream extends TransformStream<Uint8Array, Value> {
   #parser: Parser;
 
   /**
-   * @param options - Decoder and queuing strategy options.
+   * Creates a stream that decodes byte chunks into complete JSON values.
+   *
+   * @param options Decoder and queuing strategy options.
    */
   constructor(options: JSONTextLineStreamOptions = {}) {
     const { writableStrategy, readableStrategy, ...rest } = options;
@@ -59,9 +61,7 @@ class JSONTextLineStream extends TransformStream<Uint8Array, Value> {
     this.#parser = new Parser(decoderOptions);
   }
 
-  /**
-   * Drains all available values from the decoder into the readable side.
-   */
+  /** Drains all available values from the decoder into the readable side. */
   #drain(controller: TransformStreamDefaultController<Value>): void {
     for (let bytes; (bytes = this.#parser.readValue()) !== undefined;) {
       controller.enqueue(new Value(bytes));

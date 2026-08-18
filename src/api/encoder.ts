@@ -1,11 +1,35 @@
 import type Token from "#src/api/token";
 import type Value from "#src/api/value";
 import { DEFAULT_ENCODER_OPTIONS } from "#src/common/constants";
-import type { SerializerOptions } from "#src/modules/serializer";
 import Serializer from "#src/modules/serializer";
 
-/** Options for {@link JSONTextEncoder}. */
-type JSONTextEncoderOptions = Partial<SerializerOptions>;
+/**
+ * Options for {@link JSONTextEncoder} and {@link JSONTextEncoderStream}.
+ *
+ * @public
+ */
+type JSONTextEncoderOptions = {
+  /** Allow duplicate object key names. Defaults to `false`. */
+  allowDuplicateNames?: boolean;
+  /** Allow invalid UTF-8 byte sequences. Defaults to `false`. */
+  allowInvalidUTF8?: boolean;
+  /** Normalize raw number tokens. Defaults to `false`. */
+  canonicalizeRawNumbers?: boolean;
+  /** Escape `<`, `>`, and `&` for HTML embedding. Defaults to `false`. */
+  escapeForHTML?: boolean;
+  /** Escape JavaScript line and paragraph separators. Defaults to `false`. */
+  escapeForJS?: boolean;
+  /** Indentation string used when `multiline` is enabled. Defaults to a tab. */
+  indent?: string;
+  /** Prefix added before each indented line. Defaults to an empty string. */
+  indentPrefix?: string;
+  /** Emit each value on its own line. Defaults to `true`. */
+  multiline?: boolean;
+  /** Emit a space after object `:` separators. Defaults to `true`. */
+  spaceAfterColon?: boolean;
+  /** Emit a space after array and object `,` separators. Defaults to `false`. */
+  spaceAfterComma?: boolean;
+};
 
 /**
  * Low-level, stateful JSON encoder that produces bytes incrementally.
@@ -22,7 +46,7 @@ class JSONTextEncoder {
   /**
    * Creates a new JSONTextEncoder instance with the given options.
    *
-   * @param options - Encoding options.
+   * @param options Encoding options.
    */
   constructor(options?: JSONTextEncoderOptions) {
     this.#serializer = new Serializer({ ...DEFAULT_ENCODER_OPTIONS, ...options });
@@ -38,10 +62,7 @@ class JSONTextEncoder {
     return this.#serializer.outputOffset;
   }
 
-  /**
-   * Resets the encoder to its initial state, clearing the output buffer and
-   * all structural state.
-   */
+  /** Resets the encoder, clearing its output buffer and structural state. */
   reset(): void {
     this.#serializer.reset();
   }
@@ -56,7 +77,7 @@ class JSONTextEncoder {
    * | `0`     | The position of the **current** container. |
    * | `-1`    | The position of the **previously** written value. |
    *
-   * @param where - Which position to return. Defaults to `1`.
+   * @param where Relative position: `-1` previous, `0` current, or `1` next. Defaults to `1`.
    * @returns A JSON Pointer string, e.g. `"/foo/0"`.
    */
   stackPointer(where: 0 | 1 | -1 = 1): string {
@@ -77,8 +98,8 @@ class JSONTextEncoder {
   /**
    * Encodes a single {@link Token} and appends its bytes to the output buffer.
    *
-   * @param token - The token to encode.
-   * @throws {SyntacticError} If the token is not valid at the current position.
+   * @param token The token to encode.
+   * @throws {SyntaxError} If the token is not valid at the current position.
    */
   writeToken(token: Token): void {
     this.#serializer.writeToken(token.kind, token.bytes);
@@ -88,9 +109,8 @@ class JSONTextEncoder {
    * Encodes a complete {@link Value} and appends its bytes to the output
    * buffer.
    *
-   * @param value - The value to encode.
-   * @throws {SyntacticError} If the value is not valid at the current
-   *   position.
+   * @param value The value to encode.
+   * @throws {SyntaxError} If the value is not valid at the current position.
    */
   writeValue(value: Value): void {
     this.#serializer.writeValue(value.kind, value.bytes);

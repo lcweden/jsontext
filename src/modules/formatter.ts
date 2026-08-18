@@ -4,7 +4,7 @@ import { encodeText } from "#src/utils/text";
 
 /** Options for {@link Formatter}. */
 type FormatterOptions = {
-  /** Indentation string used per nesting level when multiline is enabled. Defaults to two spaces. */
+  /** Indentation string used per nesting level when multiline is enabled. Defaults to a tab. */
   indent: string;
   /** Prefix prepended to every indented line when multiline is enabled. */
   indentPrefix: string;
@@ -16,11 +16,7 @@ type FormatterOptions = {
   spaceAfterComma: boolean;
 };
 
-/**
- * Handles whitespace and indentation formatting for JSON serialization.
- *
- * @internal
- */
+/** Handles whitespace and indentation formatting for JSON serialization. */
 class Formatter {
   #indentBytes: Uint8Array;
   #indentPrefixBytes: Uint8Array;
@@ -38,13 +34,12 @@ class Formatter {
   }
 
   /**
-   * Computes whitespace chunks to insert before a token or value based on the
-   * current delimiter, token kind, and structural depth.
+   * Computes whitespace chunks for a token or value.
    *
    * @param kind The {@link Kind} of token or value being formatted.
-   * @param delimiter The delimiter required before this token (`:`, `,`, or `null`).
+   * @param delimiter The required delimiter (`:`, `,`, or `null`).
    * @param depth The current structural nesting depth.
-   * @returns An array of byte chunks representing whitespace to insert.
+   * @returns Byte chunks to insert before the token or value.
    */
   getWhitespace(kind: Kind, delimiter: ":" | "," | null, depth: number): Uint8Array[] {
     const chunks: Uint8Array[] = [];

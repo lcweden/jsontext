@@ -20,7 +20,7 @@ type SerializerOptions = {
   escapeForHTML: boolean;
   /** Escape `\u2028` and `\u2029` for safe embedding in JavaScript string literals. */
   escapeForJS: boolean;
-  /** Indentation string used per nesting level when multiline is enabled. Defaults to two spaces. */
+  /** Indentation string used per nesting level when multiline is enabled. Defaults to a tab. */
   indent: string;
   /** Prefix prepended to every indented line when multiline is enabled. */
   indentPrefix: string;
@@ -32,13 +32,7 @@ type SerializerOptions = {
   spaceAfterComma: boolean;
 };
 
-/**
- * Low-level JSON serializer that writes tokens and values onto an internal
- * {@link Tape}, enforcing RFC 8259 structural rules and applying optional
- * formatting and escaping.
- *
- * @internal
- */
+/** Low-level JSON serializer that writes tokens and values onto an internal {@link Tape}, enforcing RFC 8259 structural rules and applying optional formatting and escaping. */
 class Serializer {
   #options: SerializerOptions;
   #escaper: Escaper;
@@ -79,17 +73,14 @@ class Serializer {
    * Generates a JSON Pointer representing a location relative to the current
    * serialization position.
    *
-   * @param where `-1` for the previously processed value, `0` for the current scope, `1` for the next value.
-   * @returns A {@link Pointer} representing the absolute path.
+   * @param where Relative position: `-1` previous, `0` current, or `1` next.
+   * @returns A {@link Pointer} for the selected position.
    */
   stackPointer(where: 0 | 1 | -1): Pointer {
     return this.#state.stackPointer(where);
   }
 
-  /**
-   * Resets the serializer to its initial state, clearing the output buffer and
-   * all structural state.
-   */
+  /** Resets the serializer to its initial state, clearing the output buffer and all structural state. */
   reset(): void {
     this.#state.reset();
     this.#tape.reset();
@@ -112,9 +103,9 @@ class Serializer {
    * configured whitespace or indentation before the token. On error, the
    * tape is rolled back to its pre-call length.
    *
-   * @param token The {@link Token} to write.
-   * @throws {SyntacticError} If the token is structurally invalid at the
-   *   current position.
+   * @param kind The {@link Kind} of token to write.
+   * @param bytes Raw UTF-8 bytes of the token.
+   * @throws {SyntacticError} If the token is invalid at the current position.
    */
   writeToken(kind: Kind, bytes: Uint8Array): void {
     const length = this.#tape.length;
@@ -207,9 +198,9 @@ class Serializer {
    * Automatically inserts structural delimiters and any configured whitespace
    * before the value. On error, the tape is rolled back to its pre-call length.
    *
-   * @param value The {@link Value} to write.
-   * @throws {SyntacticError} If the value is structurally invalid at the
-   *   current position.
+   * @param kind The {@link Kind} of value to write.
+   * @param bytes Raw UTF-8 bytes of the complete value.
+   * @throws {SyntacticError} If the value is invalid at the current position.
    */
   writeValue(kind: Kind, bytes: Uint8Array): void {
     const length = this.#tape.length;

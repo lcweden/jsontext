@@ -13,12 +13,7 @@ type EscaperOptions = {
   escapeForJS: boolean;
 };
 
-/**
- * Handles string escaping (HTML, JS unicode line separators) and raw number
- * canonicalization for JSON serialization.
- *
- * @internal
- */
+/** Handles string escaping for HTML and JavaScript contexts and canonicalizes raw numbers for JSON serialization. */
 class Escaper {
   #options: EscaperOptions;
   #regexEscapeForHTML: RegExp;
@@ -38,9 +33,9 @@ class Escaper {
   }
 
   /**
-   * Escapes a JSON string's raw UTF-8 bytes according to configured HTML and JS escaping options.
+   * Escapes raw UTF-8 bytes for a JSON string according to the configured HTML and JavaScript options.
    *
-   * @param bytes The raw UTF-8 bytes of the JSON string.
+   * @param bytes The raw UTF-8 bytes of a JSON string.
    * @returns The escaped UTF-8 bytes.
    */
   escapeString(bytes: Uint8Array): Uint8Array {
@@ -80,9 +75,9 @@ class Escaper {
   }
 
   /**
-   * Canonicalizes a JSON number's raw UTF-8 bytes to standard decimal representation if enabled.
+   * Canonicalizes raw UTF-8 bytes for a JSON number when canonicalization is enabled.
    *
-   * @param bytes The raw UTF-8 bytes of the JSON number.
+   * @param bytes The raw UTF-8 bytes of a JSON number.
    * @returns The canonicalized (or unchanged) UTF-8 bytes.
    */
   canonicalizeNumber(bytes: Uint8Array): Uint8Array {

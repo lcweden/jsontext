@@ -2,9 +2,10 @@ import { ASCII, KIND } from "#src/common/constants";
 import type { Kind } from "#src/common/types";
 
 /**
- * Normalizes a byte to its corresponding kind.
- * @param byte The byte to normalize.
- * @returns The corresponding kind.
+ * Maps a leading JSON byte to its token kind.
+ *
+ * @param byte The byte to map.
+ * @returns The matching {@link Kind}, or `undefined` when the byte cannot begin a JSON token.
  */
 function normalize(byte: number): Kind | undefined {
   switch (byte) {

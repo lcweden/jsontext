@@ -40,7 +40,9 @@ class JSONTextEncoderStream extends TransformStream<Token, Uint8Array> {
   #serializer: Serializer;
 
   /**
-   * @param options - Encoder and queuing strategy options.
+   * Creates a stream that encodes JSON tokens into byte chunks.
+   *
+   * @param options Encoder and queuing strategy options.
    */
   constructor(options: JSONTextEncoderStreamOptions = {}) {
     const { writableStrategy, readableStrategy, ...rest } = options;
@@ -63,9 +65,7 @@ class JSONTextEncoderStream extends TransformStream<Token, Uint8Array> {
     this.#serializer = new Serializer(encoderOptions);
   }
 
-  /**
-   * Flushes accumulated bytes from the encoder into the readable side.
-   */
+  /** Flushes accumulated bytes from the encoder into the readable side. */
   #drain(controller: TransformStreamDefaultController<Uint8Array>): void {
     const bytes = this.#serializer.takeBytes();
 

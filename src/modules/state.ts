@@ -9,11 +9,7 @@ type StateOptions = {
   allowDuplicateNames: boolean;
 };
 
-/**
- * The central coordinator for the decoding/encoding state.
- *
- * @internal
- */
+/** Coordinates syntax validation and location tracking for decoding and encoding. */
 class State {
   #automaton: Automaton;
   #names: ObjectNameStack;
@@ -61,9 +57,7 @@ class State {
     this.#automaton.appendLiteral();
   }
 
-  /**
-   * Appends a string value to the current context.
-   */
+  /** Appends a string value to the current context. */
   appendString(): void {
     this.#automaton.appendString();
   }
@@ -80,8 +74,8 @@ class State {
   /**
    * Determines if a delimiter (`:` or `,`) is required before the next token.
    *
-   * @param kind The kind of the next incoming token.
-   * @returns `":"` if a colon is needed, `","` if a comma is needed, or `null` if no delimiter is expected.
+   * @param kind The kind of the next token.
+   * @returns `":"` for a colon, `","` for a comma, or `null`.
    */
   requiredDelimiter(kind: Kind): ":" | "," | null {
     return this.#automaton.requiredDelimiter(kind);
@@ -90,8 +84,8 @@ class State {
   /**
    * Pushes a new array structure, synchronizing the underlying automaton.
    *
-   * @throws {SyntaxError} If the parent context requires an object name.
-   * @throws {RangeError} If the maximum nesting depth is exceeded.
+   * @throws {SyntaxError} If an object name is required.
+   * @throws {RangeError} If maximum nesting depth is exceeded.
    */
   pushArray(): void {
     this.#automaton.pushArray();
@@ -100,7 +94,7 @@ class State {
   /**
    * Pops the current array structure.
    *
-   * @throws {SyntaxError} If the current context is not an array, or if it is prematurely closed.
+   * @throws {SyntaxError} If the context is not an array or closes prematurely.
    */
   popArray(): void {
     this.#automaton.popArray();
@@ -110,8 +104,8 @@ class State {
    * Pushes a new object structure.
    * Synchronizes the syntax automaton, name stack, and namespace stack.
    *
-   * @throws {SyntaxError} If the parent context requires an object name.
-   * @throws {RangeError} If the maximum nesting depth is exceeded.
+   * @throws {SyntaxError} If an object name is required.
+   * @throws {RangeError} If maximum nesting depth is exceeded.
    */
   pushObject(): void {
     this.#automaton.pushObject();
@@ -122,7 +116,7 @@ class State {
   /**
    * Pops the current object structure, cleaning up the associated name and namespace tracking.
    *
-   * @throws {SyntaxError} If the current context is not an object, or if it is prematurely closed while expecting a value.
+   * @throws {SyntaxError} If the context is not an object or closes before a value.
    */
   popObject(): void {
     this.#automaton.popObject();
@@ -143,7 +137,7 @@ class State {
    * Sets the name for the current object property and validates it against duplicates.
    *
    * @param name The object key being processed.
-   * @throws {SyntaxError} If the name already exists in the current object and `allowDuplicateNames` is false.
+   * @throws {SyntaxError} If the name is a duplicate and duplicates are disallowed.
    */
   setLast(name: string): void {
     this.#names.setLast(name);
@@ -161,8 +155,8 @@ class State {
    * Dynamically generates a JSON Pointer (RFC 6901) representing a specific location
    * in the JSON structure relative to the current state.
    *
-   * @param where `-1` for the previously processed value, `0` for the current scope, `1` for the next value.
-   * @returns A `Pointer` instance representing the absolute path.
+   * @param where Relative position: `-1` previous, `0` current, or `1` next.
+   * @returns A `Pointer` for the selected position.
    * @example
    * ```javascript
    * // Object { "a": [...] } — one element at "/a/0" has just been written.

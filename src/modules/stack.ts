@@ -1,14 +1,8 @@
-/**
- * A specialized stack for tracking the current property names of nested JSON objects.
- *
- * @internal
- */
+/** A specialized stack for tracking the current property names of nested JSON objects. */
 class ObjectNameStack {
   #names: Array<string>;
 
-  /**
-   * Creates a new ObjectNameStack instance.
-   */
+  /** Creates a new ObjectNameStack instance. */
   constructor() {
     this.#names = [];
   }
@@ -29,7 +23,7 @@ class ObjectNameStack {
   }
 
   /**
-   * Retrieves the property name of the deepest (currently active) object context.
+   * Retrieves the property name of the deepest active object context.
    *
    * @returns The current property name, or an empty string if the stack is empty.
    */
@@ -37,23 +31,17 @@ class ObjectNameStack {
     return this.#names[this.#names.length - 1] ?? "";
   }
 
-  /**
-   * Pushes a new, empty name context onto the stack when entering a new JSON object.
-   */
+  /** Pushes a new, empty name context when entering a JSON object. */
   pushObject(): void {
     this.#names.push("");
   }
 
-  /**
-   * Pops the deepest name context from the stack when exiting a JSON object.
-   */
+  /** Pops the deepest name context when exiting a JSON object. */
   popObject(): void {
     this.#names.pop();
   }
 
-  /**
-   * Resets the stack to an empty state, clearing all tracked names.
-   */
+  /** Resets the stack and clears all tracked names. */
   reset(): void {
     this.#names.length = 0;
   }
@@ -68,17 +56,11 @@ class ObjectNameStack {
   }
 }
 
-/**
- * A specialized stack for tracking the uniqueness of property names within nested JSON objects.
- *
- * @internal
- */
+/** A specialized stack for tracking property-name uniqueness within nested JSON objects. */
 class ObjectNamespaceStack {
   #namespaces: Array<Set<string>>;
 
-  /**
-   *  Creates a new ObjectNamespaceStack instance.
-   */
+  /** Creates a new ObjectNamespaceStack instance. */
   constructor() {
     this.#namespaces = [];
   }
@@ -101,23 +83,17 @@ class ObjectNamespaceStack {
     return true;
   }
 
-  /**
-   * Pushes a new, empty namespace Set when entering a new JSON object.
-   */
+  /** Pushes a new, empty namespace set when entering a JSON object. */
   pushObject(): void {
     this.#namespaces.push(new Set());
   }
 
-  /**
-   * Pops and discards the namespace Set when exiting a JSON object.
-   */
+  /** Pops and discards the namespace set when exiting a JSON object. */
   popObject(): void {
     this.#namespaces.pop();
   }
 
-  /**
-   * Resets the stack to an empty state, clearing all tracked namespaces.
-   */
+  /** Resets the stack and clears all tracked namespaces. */
   reset(): void {
     this.#namespaces.length = 0;
   }

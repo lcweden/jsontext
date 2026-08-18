@@ -1,12 +1,11 @@
+/** Maintains the retained bytes and absolute offset of an incremental input stream. */
 class Cursor {
   #bytes: Uint8Array;
   #ended: boolean;
   #owned: boolean;
   #offset: number;
 
-  /**
-   * Creates a new Cursor instance.
-   */
+  /** Creates a new Cursor instance. */
   constructor() {
     this.#bytes = new Uint8Array();
     this.#ended = false;
@@ -14,22 +13,18 @@ class Cursor {
     this.#owned = false;
   }
 
-  /**
-   * The current active byte buffer.
-   */
+  /** The current active byte buffer. */
   get bytes(): Uint8Array {
     return this.#bytes;
   }
 
-  /**
-   * Indicates whether the underlying stream has completely ended.
-   */
+  /** Indicates whether the underlying stream has completely ended. */
   get ended(): boolean {
     return this.#ended;
   }
 
   /**
-   * Appends a newly received chunk of bytes to the cursor, discarding previously consumed data.
+   * Appends a newly received chunk and discards previously consumed data.
    *
    * @param chunk New bytes from the stream.
    * @param start Number of bytes already consumed from the current buffer.
@@ -69,25 +64,21 @@ class Cursor {
   }
 
   /**
-   * Calculates the absolute offset in the entire stream for a given local buffer position.
+   * Calculates the absolute stream offset for a position in the retained buffer.
    *
-   * @param position The local index within the current chunk.
-   * @returns The global byte offset from the very beginning of the stream.
+   * @param position The position within the current retained buffer.
+   * @returns The byte offset from the beginning of the stream.
    */
   at(position: number): number {
     return this.#offset + position;
   }
 
-  /**
-   * Marks the cursor as ended, indicating that no more bytes will be received.
-   */
+  /** Marks the cursor as ended so no more bytes can be received. */
   close(): void {
     this.#ended = true;
   }
 
-  /**
-   * Resets the cursor to an empty state, clearing the current buffer and resetting offsets.
-   */
+  /** Resets the cursor, clearing its buffer and offsets. */
   reset(): void {
     this.#bytes = new Uint8Array();
     this.#ended = false;
