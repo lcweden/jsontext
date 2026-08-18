@@ -1,5 +1,5 @@
 import { ASCII, KIND } from "#src/common/constants";
-import type { Kind } from "#src/types/kind";
+import type { Kind } from "#src/common/types";
 import { encodeText } from "#src/utils/text";
 
 /** Options for {@link Formatter}. */

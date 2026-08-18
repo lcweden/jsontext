@@ -1,7 +1,7 @@
 import { ASCII, KIND } from "#src/common/constants";
+import type { Kind } from "#src/common/types";
 import Cursor from "#src/modules/cursor";
 import Skipper from "#src/modules/skipper";
-import type { Kind } from "#src/types/kind";
 import { normalize } from "#src/utils/kind";
 import {
   consumeFalse,

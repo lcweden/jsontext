@@ -1,5 +1,5 @@
 import { KIND } from "#src/common/constants";
-import type { Kind } from "#src/types/kind";
+import type { Kind } from "#src/common/types";
 
 /**
  * Represents a single depth level in the automaton stack, which can be either an object or an array.

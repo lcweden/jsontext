@@ -1,9 +1,9 @@
 import { KIND } from "#src/common/constants";
 import { SyntacticError } from "#src/common/errors";
+import type { Kind } from "#src/common/types";
 import type Pointer from "#src/modules/pointer";
 import Scanner from "#src/modules/scanner";
 import State from "#src/modules/state";
-import type { Kind } from "#src/types/kind";
 import { decodeText } from "#src/utils/text";
 
 /** Options for {@link Parser}. */

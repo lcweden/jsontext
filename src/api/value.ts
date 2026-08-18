@@ -1,7 +1,7 @@
 import Token from "#src/api/token";
 import { ASCII, DEFAULT_DECODER_OPTIONS, KIND } from "#src/common/constants";
+import type { Kind } from "#src/common/types";
 import Parser from "#src/modules/parser";
-import type { Kind } from "#src/types/kind";
 import { normalize } from "#src/utils/kind";
 import { decodeText, encodeText } from "#src/utils/text";
 import { compareUTF16, consumeWhitespace } from "#src/utils/wire";

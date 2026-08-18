@@ -1,7 +1,7 @@
+import type { Kind } from "#src/common/types";
 import Automaton from "#src/modules/automaton";
 import Pointer from "#src/modules/pointer";
 import { ObjectNamespaceStack, ObjectNameStack } from "#src/modules/stack";
-import type { Kind } from "#src/types/kind";
 
 /** Options for {@link State}. */
 type StateOptions = {

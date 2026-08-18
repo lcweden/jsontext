@@ -1,5 +1,5 @@
 import { KIND } from "#src/common/constants";
-import type { Kind } from "#src/types/kind";
+import type { Kind } from "#src/common/types";
 import { normalize } from "#src/utils/kind";
 import { decodeText, encodeText } from "#src/utils/text";
 

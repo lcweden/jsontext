@@ -1,6 +1,6 @@
 import { MAX_NESTING_DEPTH } from "#src/common/constants";
+import type { Kind } from "#src/common/types";
 import Entry from "#src/modules/entry";
-import type { Kind } from "#src/types/kind";
 
 /**
  * A state machine that enforces JSON syntax rules and tracks the structural nesting depth.

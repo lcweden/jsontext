@@ -1,5 +1,5 @@
 /** ASCII byte values used for JSON parsing and encoding. */
-const ASCII = {
+export const ASCII = {
   TAB: 0x09,
   LINE_FEED: 0x0A,
   CARRIAGE_RETURN: 0x0D,
@@ -53,7 +53,7 @@ const ASCII = {
 } as const;
 
 /** Unicode escape sequences for safe HTML and JavaScript embedding. */
-const UNICODE = {
+export const UNICODE = {
   OPEN_ANGLED_BRACKET: "\\u003c",
   CLOSE_ANGLED_BRACKET: "\\u003e",
   AMPERSAND: "\\u0026",
@@ -62,7 +62,7 @@ const UNICODE = {
 } as const;
 
 /** String discriminants identifying the structural role of a JSON token. */
-const KIND = {
+export const KIND = {
   NULL: "null",
   FALSE: "false",
   TRUE: "true",
@@ -75,16 +75,16 @@ const KIND = {
 } as const;
 
 /** Maximum JSON nesting depth supported by the decoder and encoder. */
-const MAX_NESTING_DEPTH = 10_000;
+export const MAX_NESTING_DEPTH = 10_000;
 
 /** Default option values for decoding. */
-const DEFAULT_DECODER_OPTIONS = {
+export const DEFAULT_DECODER_OPTIONS = {
   allowDuplicateNames: false,
   allowInvalidUTF8: false,
 } as const;
 
 /** Default option values for encoding. */
-const DEFAULT_ENCODER_OPTIONS = {
+export const DEFAULT_ENCODER_OPTIONS = {
   allowInvalidUTF8: false,
   allowDuplicateNames: false,
   escapeForHTML: false,
@@ -98,33 +98,21 @@ const DEFAULT_ENCODER_OPTIONS = {
 } as const;
 
 /** JSON Path identifier types. */
-const IDENTIFIER = {
+export const IDENTIFIER = {
   ROOT: 0,
   CURRENT: 1,
 } as const;
 
 /** JSON Path segment kinds. */
-const SEGMENT = {
+export const SEGMENT = {
   CHILD: 0,
   DESCENDANT: 1,
 } as const;
 
 /** JSON Path selector kinds. */
-const SELECTOR = {
+export const SELECTOR = {
   NAME: 0,
   WILDCARD: 1,
   INDEX: 2,
   ARRAY_SLICE: 3,
 } as const;
-
-export {
-  ASCII,
-  DEFAULT_DECODER_OPTIONS,
-  DEFAULT_ENCODER_OPTIONS,
-  IDENTIFIER,
-  KIND,
-  MAX_NESTING_DEPTH,
-  SEGMENT,
-  SELECTOR,
-  UNICODE,
-};

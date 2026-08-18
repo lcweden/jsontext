@@ -1,9 +1,9 @@
 import Token from "#src/api/token";
 import Value from "#src/api/value";
 import { DEFAULT_DECODER_OPTIONS } from "#src/common/constants";
+import type { Kind } from "#src/common/types";
 import type { ParserOptions } from "#src/modules/parser";
 import Parser from "#src/modules/parser";
-import type { Kind } from "#src/types/kind";
 
 /** Options for {@link JSONTextDecoder}. */
 type JSONTextDecoderOptions = Partial<ParserOptions>;
