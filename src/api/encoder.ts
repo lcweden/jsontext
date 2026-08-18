@@ -81,7 +81,7 @@ class JSONTextEncoder {
    * @throws {SyntacticError} If the token is not valid at the current position.
    */
   writeToken(token: Token): void {
-    this.#serializer.writeToken(token);
+    this.#serializer.writeToken(token.kind, token.bytes);
   }
 
   /**
@@ -93,7 +93,7 @@ class JSONTextEncoder {
    *   position.
    */
   writeValue(value: Value): void {
-    this.#serializer.writeValue(value);
+    this.#serializer.writeValue(value.kind, value.bytes);
   }
 }
 

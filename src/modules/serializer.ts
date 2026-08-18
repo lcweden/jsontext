@@ -1,13 +1,12 @@
-import Token from "#src/api/token";
-import Value from "#src/api/value";
 import { ASCII, KIND } from "#src/common/constants";
 import { SyntacticError } from "#src/common/errors";
+import type { Kind } from "#src/common/types";
 import Escaper from "#src/modules/escaper";
 import Formatter from "#src/modules/formatter";
 import type Pointer from "#src/modules/pointer";
 import State from "#src/modules/state";
 import Tape from "#src/modules/tape";
-import { decodeText } from "#src/utils/text";
+import { decodeText, encodeText } from "#src/utils/text";
 
 /** Options for {@link Serializer}. */
 type SerializerOptions = {
@@ -41,11 +40,14 @@ type SerializerOptions = {
  * @internal
  */
 class Serializer {
+  #options: SerializerOptions;
   #escaper: Escaper;
   #formatter: Formatter;
-  #options: SerializerOptions;
   #state: State;
   #tape: Tape;
+  #trueBytes: Uint8Array;
+  #falseBytes: Uint8Array;
+  #nullBytes: Uint8Array;
 
   /**
    * Creates a new Serializer instance with the given options.
@@ -53,11 +55,14 @@ class Serializer {
    * @param options Serializer configuration options.
    */
   constructor(options: SerializerOptions) {
+    this.#options = options;
     this.#escaper = new Escaper(options);
     this.#formatter = new Formatter(options);
-    this.#options = options;
     this.#state = new State(options);
     this.#tape = new Tape();
+    this.#trueBytes = encodeText(KIND.TRUE);
+    this.#falseBytes = encodeText(KIND.FALSE);
+    this.#nullBytes = encodeText(KIND.NULL);
   }
 
   /** The current structural nesting depth. */
@@ -111,9 +116,9 @@ class Serializer {
    * @throws {SyntacticError} If the token is structurally invalid at the
    *   current position.
    */
-  writeToken(token: Token): void {
+  writeToken(kind: Kind, bytes: Uint8Array): void {
     const length = this.#tape.length;
-    const delimiter = this.#state.requiredDelimiter(token.kind);
+    const delimiter = this.#state.requiredDelimiter(kind);
 
     try {
       if (delimiter === ":") {
@@ -122,27 +127,27 @@ class Serializer {
         this.#tape.appendByte(ASCII.COMMA);
       }
 
-      for (const bytes of this.#formatter.getWhitespace(token.kind, delimiter, this.#state.depth)) {
+      for (const bytes of this.#formatter.getWhitespace(kind, delimiter, this.#state.depth)) {
         this.#tape.appendBytes(bytes);
       }
 
-      switch (token.kind) {
+      switch (kind) {
         case KIND.NULL:
-          this.#tape.appendBytes(Token.NULL.bytes);
+          this.#tape.appendBytes(this.#nullBytes);
           this.#state.appendLiteral();
           break;
         case KIND.TRUE:
-          this.#tape.appendBytes(Token.TRUE.bytes);
+          this.#tape.appendBytes(this.#trueBytes);
           this.#state.appendLiteral();
           break;
         case KIND.FALSE:
-          this.#tape.appendBytes(Token.FALSE.bytes);
+          this.#tape.appendBytes(this.#falseBytes);
           this.#state.appendLiteral();
           break;
         case KIND.STRING: {
-          const bytes = this.#escaper.escapeString(token.bytes);
+          const escaped = this.#escaper.escapeString(bytes);
 
-          this.#tape.appendBytes(bytes);
+          this.#tape.appendBytes(escaped);
 
           if (this.#state.needsObjectName) {
             const decoded = decodeText(bytes, !this.#options.allowInvalidUTF8);
@@ -155,9 +160,9 @@ class Serializer {
           break;
         }
         case KIND.NUMBER: {
-          const bytes = this.#escaper.canonicalizeNumber(token.bytes);
+          const escaped = this.#escaper.canonicalizeNumber(bytes);
 
-          this.#tape.appendBytes(bytes);
+          this.#tape.appendBytes(escaped);
           this.#state.appendNumber();
           break;
         }
@@ -206,9 +211,9 @@ class Serializer {
    * @throws {SyntacticError} If the value is structurally invalid at the
    *   current position.
    */
-  writeValue(value: Value): void {
+  writeValue(kind: Kind, bytes: Uint8Array): void {
     const length = this.#tape.length;
-    const delimiter = this.#state.requiredDelimiter(value.kind);
+    const delimiter = this.#state.requiredDelimiter(kind);
 
     try {
       if (delimiter === ":") {
@@ -217,21 +222,19 @@ class Serializer {
         this.#tape.appendByte(ASCII.COMMA);
       }
 
-      for (const bytes of this.#formatter.getWhitespace(value.kind, delimiter, this.#state.depth)) {
+      for (const bytes of this.#formatter.getWhitespace(kind, delimiter, this.#state.depth)) {
         this.#tape.appendBytes(bytes);
       }
 
-      let bytes = value.bytes;
-
-      if (value.kind === KIND.STRING) {
+      if (kind === KIND.STRING) {
         bytes = this.#escaper.escapeString(bytes);
-      } else if (value.kind === KIND.NUMBER) {
+      } else if (kind === KIND.NUMBER) {
         bytes = this.#escaper.canonicalizeNumber(bytes);
       }
 
       this.#tape.appendBytes(bytes);
 
-      switch (value.kind) {
+      switch (kind) {
         case KIND.NULL:
         case KIND.TRUE:
         case KIND.FALSE:

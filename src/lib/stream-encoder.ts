@@ -49,7 +49,7 @@ class JSONTextEncoderStream extends TransformStream<Token, Uint8Array> {
     super(
       {
         transform: (token, controller) => {
-          this.#serializer.writeToken(token);
+          this.#serializer.writeToken(token.kind, token.bytes);
           this.#drain(controller);
         },
         flush: (controller) => {
