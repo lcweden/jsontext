@@ -1,6 +1,6 @@
+import { Kind } from "#src/api/kind";
 import Token from "#src/api/token";
 import { ASCII, DEFAULT_DECODER_OPTIONS, KIND } from "#src/common/constants";
-import type { Kind } from "#src/common/types";
 import Parser from "#src/modules/parser";
 import { normalize } from "#src/utils/kind";
 import { decodeText, encodeText } from "#src/utils/text";

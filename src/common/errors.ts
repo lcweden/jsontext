@@ -10,6 +10,8 @@ class SyntacticError extends SyntaxError {
   #offset: number;
 
   /**
+   * Creates a new `SyntacticError` instance.
+   *
    * @param message A human-readable description of the syntax error.
    * @param pointer JSON Pointer to the location in the document.
    * @param offset Byte offset at which the error was detected.
