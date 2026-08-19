@@ -1,6 +1,6 @@
 {
   "name": "jsontext",
-  "version": "0.2.3",
+  "version": "0.3.0",
   "description": "A state machine for incremental JSON processing with high-level APIs.",
   "keywords": ["json", "streaming", "parser", "encoder"],
   "license": "MIT",
