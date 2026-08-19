@@ -18,14 +18,6 @@
   "workspace": {
     "dependencies": [
       "jsr:@std/assert@1"
-    ],
-    "packageJson": {
-      "dependencies": [
-        "npm:@types/node@^25.9.1",
-        "npm:typescript@~6.0.2",
-        "npm:unplugin-dts@^1.0.1",
-        "npm:vite@^8.0.9"
-      ]
-    }
+    ]
   }
 }

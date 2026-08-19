@@ -1,5 +1,5 @@
+import Value from "#src/api/value";
 import { KIND } from "#src/common/constants";
-import Value from "#src/modules/value";
 import { encodeText as e } from "#src/utils/text";
 import { assertEquals, assertFalse, assertThrows } from "#std/assert";
 

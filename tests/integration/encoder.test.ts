@@ -1,7 +1,7 @@
+import Token from "#src/api/token";
+import Value from "#src/api/value";
 import { SyntacticError } from "#src/common/errors";
 import { JSONTextEncoder } from "#src/index";
-import Token from "#src/modules/token";
-import Value from "#src/modules/value";
 import { decodeText, encodeText } from "#src/utils/text";
 import { assertEquals, assertThrows } from "#std/assert";
 
@@ -122,7 +122,7 @@ Deno.test("[integration] JSONTextEncoder", async (test) => {
     await test.step("should return 0 before any writes", () => {
       const encoder = new JSONTextEncoder();
 
-      assertEquals(encoder.outputOffset(), 0);
+      assertEquals(encoder.outputOffset, 0);
     });
 
     await test.step("should advance after each token is written", () => {
@@ -130,10 +130,10 @@ Deno.test("[integration] JSONTextEncoder", async (test) => {
 
       encoder.writeToken(Token.fromText("["));
 
-      assertEquals(encoder.outputOffset(), 1);
+      assertEquals(encoder.outputOffset, 1);
       encoder.writeToken(Token.fromNumber(1));
 
-      assertEquals(encoder.outputOffset(), 2);
+      assertEquals(encoder.outputOffset, 2);
     });
   });
 

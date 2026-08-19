@@ -1,30 +1,51 @@
+import type { Kind } from "#src/common/types";
 import Automaton from "#src/modules/automaton";
 import Pointer from "#src/modules/pointer";
 import { ObjectNamespaceStack, ObjectNameStack } from "#src/modules/stack";
-import type { Kind } from "#src/types/kind";
-import type { BaseOptions } from "#src/types/options";
 
-/**
- * The central coordinator for the decoding/encoding state.
- *
- * @internal
- */
+/** Options for {@link State}. */
+type StateOptions = {
+  /** Allow duplicate object key names. By default, duplicate names throw a `SyntacticError`. */
+  allowDuplicateNames: boolean;
+};
+
+/** Coordinates syntax validation and location tracking for decoding and encoding. */
 class State {
   #automaton: Automaton;
   #names: ObjectNameStack;
   #namespaces: ObjectNamespaceStack;
-  #options: BaseOptions;
+  #options: StateOptions;
 
   /**
    * Creates a new State coordinator.
    *
    * @param options Decoder/encoder configuration options.
    */
-  constructor(options: BaseOptions) {
+  constructor(options: StateOptions) {
     this.#automaton = new Automaton();
     this.#names = new ObjectNameStack();
     this.#namespaces = new ObjectNamespaceStack();
     this.#options = options;
+  }
+
+  /** The current structural nesting depth. */
+  get depth(): number {
+    return this.#automaton.depth;
+  }
+
+  /** The last object name processed in the current context. */
+  get lastObjectName(): string {
+    return this.#names.getLast();
+  }
+
+  /** Checks if the current context expects an object name. */
+  get needsObjectName(): boolean {
+    return this.#automaton.last.needsObjectName;
+  }
+
+  /** Checks if the current context expects an object value. */
+  get needsObjectValue(): boolean {
+    return this.#automaton.last.needsObjectValue;
   }
 
   /**
@@ -36,9 +57,7 @@ class State {
     this.#automaton.appendLiteral();
   }
 
-  /**
-   * Appends a string value to the current context.
-   */
+  /** Appends a string value to the current context. */
   appendString(): void {
     this.#automaton.appendString();
   }
@@ -53,56 +72,20 @@ class State {
   }
 
   /**
-   * Returns the current nesting depth of the structural state.
-   *
-   * @returns The current nesting depth — `1` at the top level, incremented by each open object or array.
-   */
-  depth(): number {
-    return this.#automaton.depth();
-  }
-
-  /**
    * Determines if a delimiter (`:` or `,`) is required before the next token.
    *
-   * @param kind The kind of the next incoming token.
-   * @returns `":"` if a colon is needed, `","` if a comma is needed, or `null` if no delimiter is expected.
+   * @param kind The kind of the next token.
+   * @returns `":"` for a colon, `","` for a comma, or `null`.
    */
-  needDelimiter(kind: Kind): ":" | "," | null {
-    return this.#automaton.needDelimiter(kind);
-  }
-
-  /**
-   * Checks if the current context expects an object key.
-   *
-   * @returns `true` if the next token must be a string serving as an object name, `false` otherwise.
-   */
-  needObjectName(): boolean {
-    return this.#automaton.last.needObjectName();
-  }
-
-  /**
-   * Checks if the current context expects an object value.
-   *
-   * @returns `true` if an object value is needed, `false` otherwise.
-   */
-  needObjectValue(): boolean {
-    return this.#automaton.last.needObjectValue();
-  }
-
-  /**
-   * Retrieves the name of the currently active object property.
-   *
-   * @returns The current object property name, or an empty string if not inside an object.
-   */
-  lastObjectName(): string {
-    return this.#names.getLast();
+  requiredDelimiter(kind: Kind): ":" | "," | null {
+    return this.#automaton.requiredDelimiter(kind);
   }
 
   /**
    * Pushes a new array structure, synchronizing the underlying automaton.
    *
-   * @throws {SyntaxError} If the parent context requires an object name.
-   * @throws {RangeError} If the maximum nesting depth is exceeded.
+   * @throws {SyntaxError} If an object name is required.
+   * @throws {RangeError} If maximum nesting depth is exceeded.
    */
   pushArray(): void {
     this.#automaton.pushArray();
@@ -111,7 +94,7 @@ class State {
   /**
    * Pops the current array structure.
    *
-   * @throws {SyntaxError} If the current context is not an array, or if it is prematurely closed.
+   * @throws {SyntaxError} If the context is not an array or closes prematurely.
    */
   popArray(): void {
     this.#automaton.popArray();
@@ -121,8 +104,8 @@ class State {
    * Pushes a new object structure.
    * Synchronizes the syntax automaton, name stack, and namespace stack.
    *
-   * @throws {SyntaxError} If the parent context requires an object name.
-   * @throws {RangeError} If the maximum nesting depth is exceeded.
+   * @throws {SyntaxError} If an object name is required.
+   * @throws {RangeError} If maximum nesting depth is exceeded.
    */
   pushObject(): void {
     this.#automaton.pushObject();
@@ -133,7 +116,7 @@ class State {
   /**
    * Pops the current object structure, cleaning up the associated name and namespace tracking.
    *
-   * @throws {SyntaxError} If the current context is not an object, or if it is prematurely closed while expecting a value.
+   * @throws {SyntaxError} If the context is not an object or closes before a value.
    */
   popObject(): void {
     this.#automaton.popObject();
@@ -142,10 +125,19 @@ class State {
   }
 
   /**
+   * Resets the entire state, clearing the automaton, name stack, and namespace stack.
+   */
+  reset(): void {
+    this.#automaton.reset();
+    this.#names.reset();
+    this.#namespaces.reset();
+  }
+
+  /**
    * Sets the name for the current object property and validates it against duplicates.
    *
    * @param name The object key being processed.
-   * @throws {SyntaxError} If the name already exists in the current object and `allowDuplicateNames` is false.
+   * @throws {SyntaxError} If the name is a duplicate and duplicates are disallowed.
    */
   setLast(name: string): void {
     this.#names.setLast(name);
@@ -163,8 +155,8 @@ class State {
    * Dynamically generates a JSON Pointer (RFC 6901) representing a specific location
    * in the JSON structure relative to the current state.
    *
-   * @param where `-1` for the previously processed value, `0` for the current scope, `1` for the next value.
-   * @returns A `Pointer` instance representing the absolute path.
+   * @param where Relative position: `-1` previous, `0` current, or `1` next.
+   * @returns A `Pointer` for the selected position.
    * @example
    * ```javascript
    * // Object { "a": [...] } — one element at "/a/0" has just been written.
@@ -179,29 +171,29 @@ class State {
     const tokens: string[] = [];
     let depth = 0;
 
-    for (let index = 1; index < this.#automaton.depth(); index++) {
+    for (let index = 1; index < this.#automaton.depth; index++) {
       const entry = this.#automaton.getEntry(index);
       let delta = -1;
 
-      if (index === this.#automaton.depth() - 1) {
-        const isEmpty = where < 0 && entry.count() === 0;
-        const isNotInObject = where === 0 && !entry.needObjectValue();
-        const isExpectingName = where > 0 && entry.needObjectName();
+      if (index === this.#automaton.depth - 1) {
+        const isEmpty = where < 0 && entry.count === 0;
+        const isNotInObject = where === 0 && !entry.needsObjectValue;
+        const isExpectingName = where > 0 && entry.needsObjectName;
 
         if (isEmpty || isNotInObject || isExpectingName) {
           return new Pointer(tokens);
         }
 
-        if (where > 0 && entry.isArray()) {
+        if (where > 0 && entry.isArray) {
           delta = 0;
         }
       }
 
-      if (entry.isObject()) {
+      if (entry.isObject) {
         tokens.push(this.#names.getObjectName(depth));
         depth++;
       } else {
-        tokens.push(String(entry.count() + delta));
+        tokens.push(String(entry.count + delta));
       }
     }
 
@@ -210,3 +202,4 @@ class State {
 }
 
 export default State;
+export type { StateOptions };

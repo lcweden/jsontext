@@ -1,23 +1,21 @@
 import { MAX_NESTING_DEPTH } from "#src/common/constants";
+import type { Kind } from "#src/common/types";
 import Entry from "#src/modules/entry";
-import type { Kind } from "#src/types/kind";
 
-/**
- * A state machine that enforces JSON syntax rules and tracks the structural nesting depth.
- * It ensures that the sequence of incoming tokens adheres strictly to `RFC 8259`.
- *
- * @internal
- */
+/** A state machine that enforces JSON syntax rules and tracks structural nesting depth. */
 class Automaton {
   #last: Entry;
   #stack: Entry[];
 
-  /**
-   * Creates a new Automaton instance.
-   */
+  /** Creates a new Automaton instance. */
   constructor() {
     this.#last = new Entry("array");
     this.#stack = [];
+  }
+
+  /** The current structural nesting depth. */
+  get depth(): number {
+    return this.#stack.length + 1;
   }
 
   /** The current entry at the deepest active parsing context. */
@@ -36,19 +34,14 @@ class Automaton {
    * @throws {SyntaxError} If the current entry requires an object name.
    */
   appendLiteral(): void {
-    if (this.#last.needObjectName()) {
+    if (this.#last.needsObjectName) {
       throw new SyntaxError("object name must be a string");
     }
 
     this.#last.increment();
   }
 
-  /**
-   * Appends a string value to the current context.
-   *
-   * Unlike {@link appendLiteral}, strings are valid in both object-name and
-   * value positions, so no structural guard is applied.
-   */
+  /** Appends a string value without applying an object-name guard. */
   appendString(): void {
     this.#last.increment();
   }
@@ -60,15 +53,6 @@ class Automaton {
    */
   appendNumber(): void {
     this.appendLiteral();
-  }
-
-  /**
-   * Returns the current nesting depth of the structural state.
-   *
-   * @returns The current nesting depth — `1` at the top level, incremented by each open object or array.
-   */
-  depth(): number {
-    return this.#stack.length + 1;
   }
 
   /**
@@ -92,7 +76,7 @@ class Automaton {
    * @throws {RangeError} If the maximum nesting depth is exceeded.
    */
   pushObject(): void {
-    if (this.#last.needObjectName()) {
+    if (this.#last.needsObjectName) {
       throw new SyntaxError("object name must be a string");
     }
 
@@ -112,11 +96,11 @@ class Automaton {
    * @throws {SyntaxError} If the current context is not an object, or if it is prematurely closed while expecting a value.
    */
   popObject(): void {
-    if (!this.#last.isObject()) {
+    if (!this.#last.isObject) {
       throw new SyntaxError("mismatching } for object");
     }
 
-    if (this.#last.needObjectValue()) {
+    if (this.#last.needsObjectValue) {
       throw new SyntaxError("missing value after object name");
     }
 
@@ -134,7 +118,7 @@ class Automaton {
    * @throws {RangeError} If the maximum nesting depth is exceeded.
    */
   pushArray(): void {
-    if (this.#last.needObjectName()) {
+    if (this.#last.needsObjectName) {
       throw new SyntaxError("object name must be a string");
     }
 
@@ -154,7 +138,7 @@ class Automaton {
    * @throws {SyntaxError} If the current context is not an array, or if it's the implicit top-level array being closed.
    */
   popArray(): void {
-    if (!this.#last.isArray() || this.#stack.length === 0) {
+    if (!this.#last.isArray || this.#stack.length === 0) {
       throw new SyntaxError("mismatching structural token for object or array");
     }
 
@@ -165,14 +149,20 @@ class Automaton {
     }
   }
 
+  /** Resets the automaton to its initial top-level array state. */
+  reset(): void {
+    this.#last = new Entry("array");
+    this.#stack.length = 0;
+  }
+
   /**
    * Determines whether an implicit delimiter is required before the next token.
    *
    * @param kind The kind of the next incoming token.
    * @returns `":"` if a colon is needed, `","` if a comma is needed, or `null` if no delimiter is expected.
    */
-  needDelimiter(kind: Kind): ":" | "," | null {
-    if (this.#last.needImplicitColon()) {
+  requiredDelimiter(kind: Kind): ":" | "," | null {
+    if (this.#last.needsImplicitColon) {
       return ":";
     }
 

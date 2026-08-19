@@ -1,4 +1,7 @@
-import { IDENTIFIER, SEGMENT, SELECTOR } from "#src/common/constants";
+import { IDENTIFIER, KIND, SEGMENT, SELECTOR } from "#src/common/constants";
+
+/** A union of the string values used to identify JSON token kinds. */
+export type Kind = typeof KIND[keyof typeof KIND];
 
 export type NameSelector = { type: typeof SELECTOR.NAME; name: string };
 

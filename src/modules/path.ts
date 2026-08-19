@@ -6,7 +6,7 @@ import type {
   Segment,
   Selector,
   WildcardSelector,
-} from "#src/types/path";
+} from "#src/common/types";
 import { decodeText } from "#src/utils/text";
 import { consumeNumber, consumeWhitespace } from "#src/utils/wire";
 
@@ -19,10 +19,9 @@ import { consumeNumber, consumeWhitespace } from "#src/utils/wire";
  * - **Descendant Segment**: `..`
  * - **Name Selector**: `.name` or `['name']`
  * - **Wildcard Selector**: `.*` or `[*]`
- * - **Index Selector (positive)**: `[1]`
- * - **Array Slice Selector (positive)**: `[0:5]` or `[::2]`
+ * - **Index Selector (non-negative)**: `[1]`
+ * - **Array Slice Selector (non-negative)**: `[0:5]` or `[::2]`
  *
- * @internal
  * @see https://www.rfc-editor.org/rfc/rfc9535
  * @example
  * ```javascript
@@ -332,11 +331,7 @@ class Path {
   }
 }
 
-/**
- * NFA implementation for JSON Path matching.
- *
- * @internal
- */
+/** NFA implementation for JSON Path matching. */
 class Matcher {
   #segments: Segment[];
   #stack: number[];
@@ -444,9 +439,7 @@ class Matcher {
     this.#stack.push(next);
   }
 
-  /**
-   * Pops the last step from the matcher state.
-   */
+  /** Pops the last step from the matcher state. */
   pop(): void {
     this.#stack.pop();
   }

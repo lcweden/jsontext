@@ -1,5 +1,5 @@
+import Token from "#src/api/token";
 import { JSONTextEncoderStream } from "#src/index";
-import Token from "#src/modules/token";
 import { decodeText } from "#src/utils/text";
 import { assertEquals, assertRejects } from "#std/assert";
 

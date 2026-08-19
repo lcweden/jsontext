@@ -1,4 +1,4 @@
-name: Publish
+name: Publish Package
 
 on:
   release:
@@ -14,29 +14,25 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v6
 
       - name: Set up Node.js
         uses: actions/setup-node@v6
         with:
           node-version: lts/*
-          cache: npm
           registry-url: https://registry.npmjs.org/
 
-      - name: Update npm to latest
-        run: npm install -g npm@latest
+      - name: Set up Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.9.5
 
-      - name: Install dependencies
-        run: |
-          rm -rf node_modules package-lock.json
-          npm install
-
-      - name: Build
-        run: npm run build -- --mode lib
+      - name: Build Package
+        run: deno task build
 
       - name: Publish to npm
         run: npm publish --access public --provenance
 
       - name: Publish to JSR
-        run: npx jsr publish --allow-dirty
+        run: deno publish

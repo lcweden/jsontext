@@ -9,8 +9,9 @@ Deno.test("[integration] JSONTextDecoder", async (test) => {
     await test.step("should read null", () => {
       const json = JSON.stringify(null);
       const encoded = encodeText(json);
-      const decoder = new JSONTextDecoder(encoded);
+      const decoder = new JSONTextDecoder();
 
+      decoder.push(encoded);
       decoder.end();
 
       const token = decoder.readToken();
@@ -21,8 +22,9 @@ Deno.test("[integration] JSONTextDecoder", async (test) => {
     await test.step("should read true", () => {
       const json = JSON.stringify(true);
       const encoded = encodeText(json);
-      const decoder = new JSONTextDecoder(encoded);
+      const decoder = new JSONTextDecoder();
 
+      decoder.push(encoded);
       decoder.end();
 
       const token = decoder.readToken();
@@ -34,8 +36,9 @@ Deno.test("[integration] JSONTextDecoder", async (test) => {
     await test.step("should read false", () => {
       const json = JSON.stringify(false);
       const encoded = encodeText(json);
-      const decoder = new JSONTextDecoder(encoded);
+      const decoder = new JSONTextDecoder();
 
+      decoder.push(encoded);
       decoder.end();
 
       const token = decoder.readToken();
@@ -47,8 +50,9 @@ Deno.test("[integration] JSONTextDecoder", async (test) => {
     await test.step("should read a number", () => {
       const json = JSON.stringify(42);
       const encoded = encodeText(json);
-      const decoder = new JSONTextDecoder(encoded);
+      const decoder = new JSONTextDecoder();
 
+      decoder.push(encoded);
       decoder.end();
 
       const token = decoder.readToken();
@@ -60,8 +64,9 @@ Deno.test("[integration] JSONTextDecoder", async (test) => {
     await test.step("should read a string", () => {
       const json = JSON.stringify("hello");
       const encoded = encodeText(json);
-      const decoder = new JSONTextDecoder(encoded);
+      const decoder = new JSONTextDecoder();
 
+      decoder.push(encoded);
       decoder.end();
 
       const token = decoder.readToken();
@@ -73,8 +78,9 @@ Deno.test("[integration] JSONTextDecoder", async (test) => {
     await test.step("should read array tokens in order", () => {
       const json = JSON.stringify([1, 2]);
       const encoded = encodeText(json);
-      const decoder = new JSONTextDecoder(encoded);
+      const decoder = new JSONTextDecoder();
 
+      decoder.push(encoded);
       decoder.end();
 
       assertEquals(decoder.readToken()?.kind, KIND.ARRAY_BEGIN);
@@ -87,8 +93,9 @@ Deno.test("[integration] JSONTextDecoder", async (test) => {
     await test.step("should read object tokens in order", () => {
       const json = JSON.stringify({ a: 1 });
       const encoded = encodeText(json);
-      const decoder = new JSONTextDecoder(encoded);
+      const decoder = new JSONTextDecoder();
 
+      decoder.push(encoded);
       decoder.end();
 
       assertEquals(decoder.readToken()?.kind, KIND.OBJECT_BEGIN);
@@ -103,8 +110,9 @@ Deno.test("[integration] JSONTextDecoder", async (test) => {
     await test.step("should read a scalar value", () => {
       const json = JSON.stringify(42);
       const encoded = encodeText(json);
-      const decoder = new JSONTextDecoder(encoded);
+      const decoder = new JSONTextDecoder();
 
+      decoder.push(encoded);
       decoder.end();
 
       const value = decoder.readValue();
@@ -116,8 +124,9 @@ Deno.test("[integration] JSONTextDecoder", async (test) => {
     await test.step("should read a nested array as one value", () => {
       const json = JSON.stringify([1, 2]);
       const encoded = encodeText(json);
-      const decoder = new JSONTextDecoder(encoded);
+      const decoder = new JSONTextDecoder();
 
+      decoder.push(encoded);
       decoder.end();
 
       const value = decoder.readValue();
@@ -129,8 +138,9 @@ Deno.test("[integration] JSONTextDecoder", async (test) => {
     await test.step("should read a nested object as one value", () => {
       const json = JSON.stringify({ a: 1 });
       const encoded = encodeText(json);
-      const decoder = new JSONTextDecoder(encoded);
+      const decoder = new JSONTextDecoder();
 
+      decoder.push(encoded);
       decoder.end();
 
       const value = decoder.readValue();
@@ -142,8 +152,9 @@ Deno.test("[integration] JSONTextDecoder", async (test) => {
     await test.step("should read elements inside an outer array one at a time", () => {
       const json = JSON.stringify([1, "two", [3]]);
       const encoded = encodeText(json);
-      const decoder = new JSONTextDecoder(encoded);
+      const decoder = new JSONTextDecoder();
 
+      decoder.push(encoded);
       decoder.end();
       decoder.readToken();
 
@@ -169,8 +180,9 @@ Deno.test("[integration] JSONTextDecoder", async (test) => {
     await test.step("should not advance the read position", () => {
       const json = JSON.stringify(42);
       const encoded = encodeText(json);
-      const decoder = new JSONTextDecoder(encoded);
+      const decoder = new JSONTextDecoder();
 
+      decoder.push(encoded);
       decoder.end();
 
       assertEquals(decoder.peekKind(), KIND.NUMBER);
@@ -189,8 +201,9 @@ Deno.test("[integration] JSONTextDecoder", async (test) => {
     await test.step("should skip a scalar and allow reading the next value", () => {
       const json = JSON.stringify([1, 2]);
       const encoded = encodeText(json);
-      const decoder = new JSONTextDecoder(encoded);
+      const decoder = new JSONTextDecoder();
 
+      decoder.push(encoded);
       decoder.end();
       decoder.readToken();
       decoder.skipValue();
@@ -201,8 +214,9 @@ Deno.test("[integration] JSONTextDecoder", async (test) => {
     await test.step("should skip a nested structure and allow reading the next value", () => {
       const json = JSON.stringify([[1, 2], 3]);
       const encoded = encodeText(json);
-      const decoder = new JSONTextDecoder(encoded);
+      const decoder = new JSONTextDecoder();
 
+      decoder.push(encoded);
       decoder.end();
       decoder.readToken();
 
@@ -320,8 +334,9 @@ Deno.test("[integration] JSONTextDecoder", async (test) => {
   await test.step("[scenario] options", async (test) => {
     await test.step("should reject duplicate names by default", () => {
       const encoded = encodeText('{"a":1,"a":2}');
-      const decoder = new JSONTextDecoder(encoded);
+      const decoder = new JSONTextDecoder();
 
+      decoder.push(encoded);
       decoder.end();
       decoder.readToken();
       decoder.readToken();
@@ -332,8 +347,9 @@ Deno.test("[integration] JSONTextDecoder", async (test) => {
 
     await test.step("should allow duplicate names when configured", () => {
       const encoded = encodeText('{"a":1,"a":2}');
-      const decoder = new JSONTextDecoder(encoded, { allowDuplicateNames: true });
+      const decoder = new JSONTextDecoder({ allowDuplicateNames: true });
 
+      decoder.push(encoded);
       decoder.end();
       decoder.readToken();
       decoder.readToken();
@@ -349,8 +365,9 @@ Deno.test("[integration] JSONTextDecoder", async (test) => {
     await test.step("should not throw when input is fully consumed", () => {
       const json = JSON.stringify(42);
       const encoded = encodeText(json);
-      const decoder = new JSONTextDecoder(encoded);
+      const decoder = new JSONTextDecoder();
 
+      decoder.push(encoded);
       decoder.end();
       decoder.readToken();
       decoder.checkEOF();
@@ -358,8 +375,9 @@ Deno.test("[integration] JSONTextDecoder", async (test) => {
 
     await test.step("should throw when trailing characters remain", () => {
       const encoded = encodeText("42 extra");
-      const decoder = new JSONTextDecoder(encoded);
+      const decoder = new JSONTextDecoder();
 
+      decoder.push(encoded);
       decoder.end();
       decoder.readToken();
 
@@ -371,26 +389,28 @@ Deno.test("[integration] JSONTextDecoder", async (test) => {
     await test.step("should return 0 before reading anything", () => {
       const json = JSON.stringify(42);
       const encoded = encodeText(json);
-      const decoder = new JSONTextDecoder(encoded);
+      const decoder = new JSONTextDecoder();
 
+      decoder.push(encoded);
       decoder.end();
 
-      assertEquals(decoder.inputOffset(), 0);
+      assertEquals(decoder.inputOffset, 0);
     });
 
     await test.step("should advance after each token is read", () => {
       const json = JSON.stringify([1, 2]);
       const encoded = encodeText(json);
-      const decoder = new JSONTextDecoder(encoded);
+      const decoder = new JSONTextDecoder();
 
+      decoder.push(encoded);
       decoder.end();
       decoder.readToken();
 
-      assertEquals(decoder.inputOffset(), 1);
+      assertEquals(decoder.inputOffset, 1);
 
       decoder.readToken();
 
-      assertEquals(decoder.inputOffset(), 2);
+      assertEquals(decoder.inputOffset, 2);
     });
   });
 
@@ -398,30 +418,33 @@ Deno.test("[integration] JSONTextDecoder", async (test) => {
     await test.step("should return all bytes before any token is read", () => {
       const json = JSON.stringify(42);
       const encoded = encodeText(json);
-      const decoder = new JSONTextDecoder(encoded);
+      const decoder = new JSONTextDecoder();
 
+      decoder.push(encoded);
       decoder.end();
 
-      assertEquals(decoder.unreadBytes(), encoded);
+      assertEquals(decoder.unreadBytes, encoded);
     });
 
     await test.step("should return remaining bytes after reading a token", () => {
       const json = JSON.stringify([1, 2]);
       const encoded = encodeText(json);
-      const decoder = new JSONTextDecoder(encoded);
+      const decoder = new JSONTextDecoder();
 
+      decoder.push(encoded);
       decoder.end();
       decoder.readToken();
 
-      assertEquals(decoder.unreadBytes(), encodeText("1,2]"));
+      assertEquals(decoder.unreadBytes, encodeText("1,2]"));
     });
   });
 
   await test.step("[scenario] malformed JSON", async (test) => {
     await test.step("should throw on an unterminated string", () => {
       const encoded = encodeText('"hello');
-      const decoder = new JSONTextDecoder(encoded);
+      const decoder = new JSONTextDecoder();
 
+      decoder.push(encoded);
       decoder.end();
       decoder.readToken();
 
@@ -430,8 +453,9 @@ Deno.test("[integration] JSONTextDecoder", async (test) => {
 
     await test.step("should throw SyntacticError on an invalid character", () => {
       const encoded = encodeText("@invalid");
-      const decoder = new JSONTextDecoder(encoded);
+      const decoder = new JSONTextDecoder();
 
+      decoder.push(encoded);
       decoder.end();
 
       const error = assertThrows(() => decoder.readToken(), SyntacticError);
@@ -442,21 +466,23 @@ Deno.test("[integration] JSONTextDecoder", async (test) => {
 
     await test.step("should throw SyntacticError for a malformed null literal", () => {
       const encoded = encodeText("nulx");
-      const decoder = new JSONTextDecoder(encoded);
+      const decoder = new JSONTextDecoder();
 
+      decoder.push(encoded);
       decoder.end();
 
       const error = assertThrows(() => decoder.readToken(), SyntacticError);
 
       assertEquals(error.offset, 0);
       assertEquals(error.pointer.toString(), "");
-      assertEquals(error.message, "invalid literal null at offset 0");
+      assertEquals(error.message, "Invalid literal null at offset 0");
     });
 
     await test.step("should include pointer path in SyntacticError within an object", () => {
       const encoded = encodeText('{"a": @}');
-      const decoder = new JSONTextDecoder(encoded);
+      const decoder = new JSONTextDecoder();
 
+      decoder.push(encoded);
       decoder.end();
       decoder.readToken();
       decoder.readToken();
@@ -469,8 +495,9 @@ Deno.test("[integration] JSONTextDecoder", async (test) => {
 
     await test.step("should throw on mismatched closing bracket", () => {
       const encoded = encodeText("[1,2}");
-      const decoder = new JSONTextDecoder(encoded);
+      const decoder = new JSONTextDecoder();
 
+      decoder.push(encoded);
       decoder.end();
       decoder.readToken();
       decoder.readToken();

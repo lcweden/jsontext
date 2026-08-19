@@ -1,5 +1,4 @@
-import { KIND } from "#src/common/constants";
-import type { Kind } from "#src/types/kind";
+import { Kind } from "#src/api/kind";
 import { normalize } from "#src/utils/kind";
 import { decodeText, encodeText } from "#src/utils/text";
 
@@ -166,11 +165,11 @@ class Token {
    */
   isScalar(): boolean {
     return (
-      this.#kind === KIND.STRING ||
-      this.#kind === KIND.NUMBER ||
-      this.#kind === KIND.TRUE ||
-      this.#kind === KIND.FALSE ||
-      this.#kind === KIND.NULL
+      this.#kind === Kind.STRING ||
+      this.#kind === Kind.NUMBER ||
+      this.#kind === Kind.TRUE ||
+      this.#kind === Kind.FALSE ||
+      this.#kind === Kind.NULL
     );
   }
 
@@ -181,10 +180,10 @@ class Token {
    */
   isStructural(): boolean {
     return (
-      this.kind === KIND.OBJECT_BEGIN ||
-      this.kind === KIND.OBJECT_END ||
-      this.kind === KIND.ARRAY_BEGIN ||
-      this.kind === KIND.ARRAY_END
+      this.kind === Kind.OBJECT_BEGIN ||
+      this.kind === Kind.OBJECT_END ||
+      this.kind === Kind.ARRAY_BEGIN ||
+      this.kind === Kind.ARRAY_END
     );
   }
 
@@ -192,10 +191,10 @@ class Token {
    * Decodes this token as a JavaScript string.
    *
    * @returns The unescaped string value.
-   * @throws {TypeError} If this token is not of kind {@link KIND.STRING}.
+   * @throws {TypeError} If this token is not of kind {@link Kind.STRING}.
    */
   asString(): string {
-    if (this.#kind !== KIND.STRING) {
+    if (this.#kind !== Kind.STRING) {
       throw new TypeError(`invalid JSON token kind: ${this.#kind}`);
     }
 
@@ -209,10 +208,10 @@ class Token {
    * Decodes this token as a JavaScript number.
    *
    * @returns The numeric value.
-   * @throws {TypeError} If this token is not of kind {@link KIND.NUMBER}.
+   * @throws {TypeError} If this token is not of kind {@link Kind.NUMBER}.
    */
   asNumber(): number {
-    if (this.#kind !== KIND.NUMBER) {
+    if (this.#kind !== Kind.NUMBER) {
       throw new TypeError(`invalid JSON token kind: ${this.#kind}`);
     }
 
@@ -226,14 +225,14 @@ class Token {
    * Decodes this token as a JavaScript boolean.
    *
    * @returns `true` for `true` tokens, `false` for `false` tokens.
-   * @throws {TypeError} If this token is not of kind {@link KIND.TRUE} or {@link KIND.FALSE}.
+   * @throws {TypeError} If this token is not of kind {@link Kind.TRUE} or {@link Kind.FALSE}.
    */
   asBoolean(): boolean {
-    if (this.#kind === KIND.TRUE) {
+    if (this.#kind === Kind.TRUE) {
       return true;
     }
 
-    if (this.#kind === KIND.FALSE) {
+    if (this.#kind === Kind.FALSE) {
       return false;
     }
 
@@ -244,10 +243,10 @@ class Token {
    * Decodes this token as `null`.
    *
    * @returns `null`.
-   * @throws {TypeError} If this token is not of kind {@link KIND.NULL}.
+   * @throws {TypeError} If this token is not of kind {@link Kind.NULL}.
    */
   asNull(): null {
-    if (this.#kind !== KIND.NULL) {
+    if (this.#kind !== Kind.NULL) {
       throw new TypeError(`invalid JSON token kind: ${this.#kind}`);
     }
 
